@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
+const PDFDocument = require('pdfkit');
 
 function createTransport() {
   const host = process.env.SMTP_HOST;
@@ -17,20 +18,67 @@ function createTransport() {
   return nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
 }
 
-function dataUrlToAttachment(dataUrl, filenameBase, index) {
-  // dataUrl: data:image/png;base64,AAAA
-  const match = /^data:(.+);base64,(.+)$/.exec(dataUrl || '');
-  if (!match) return null;
-  const mime = match[1];
-  const b64 = match[2];
-  const buffer = Buffer.from(b64, 'base64');
-  const ext = mime.split('/')[1] || 'png';
-  return {
-    filename: `${filenameBase || 'ticket'}-${index + 1}.${ext}`,
-    content: buffer,
-    contentType: mime,
-    cid: `ticket${index + 1}@qr` // para inline en HTML
-  };
+/**
+ * Generates a PDF buffer for a single ticket
+ */
+async function generateTicketPDF(ticket, brandLogoPath) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: 'A5', margin: 30 });
+    const buffers = [];
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', () => resolve(Buffer.concat(buffers)));
+    doc.on('error', reject);
+
+    const BRAND_COLOR = process.env.BRAND_COLOR || '#00ffff';
+    const BG_COLOR = '#05090d';
+    const CARD_BG = '#0b0f14';
+
+    // Background
+    doc.rect(0, 0, doc.page.width, doc.page.height).fill(BG_COLOR);
+
+    // Header Border
+    doc.rect(0, 0, doc.page.width, 10).fill(BRAND_COLOR);
+
+    // Logo
+    try {
+      if (brandLogoPath && fs.existsSync(brandLogoPath)) {
+        doc.image(brandLogoPath, doc.page.width / 2 - 40, 30, { height: 60 });
+      }
+    } catch (e) {
+      console.error('Error adding logo to PDF:', e);
+    }
+
+    doc.moveDown(5);
+
+    // Brand Name
+    doc.fillColor(BRAND_COLOR).fontSize(24).text('808 PULSE', { align: 'center', characterSpacing: 2 });
+    doc.fillColor('#eafcff').fontSize(10).text('Tu acceso a la música electrónica', { align: 'center' });
+
+    doc.moveDown(2);
+
+    // Ticket Card
+    const cardTop = doc.y;
+    doc.roundedRect(40, cardTop, doc.page.width - 80, 260, 15).fill(CARD_BG);
+    doc.roundedRect(40, cardTop, doc.page.width - 80, 260, 15).lineWidth(1).stroke('rgba(0,255,255,0.3)');
+
+    // QR Code
+    const qrMatch = /^data:(.+);base64,(.+)$/.exec(ticket.qrData || '');
+    if (qrMatch) {
+      const qrBuffer = Buffer.from(qrMatch[2], 'base64');
+      doc.image(qrBuffer, doc.page.width / 2 - 75, cardTop + 20, { width: 150 });
+    }
+
+    // Info
+    doc.fillColor('#eafcff').fontSize(14).text(ticket.eventName || 'Evento', 50, cardTop + 185, { align: 'center', width: doc.page.width - 100 });
+    doc.fillColor('#9cc9d3').fontSize(10).text(`Ticket ID: ${ticket.ticketId}`, { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fillColor('#eafcff').fontSize(11).text(`Cliente: ${ticket.customerName}`, { align: 'center' });
+
+    // Footer info
+    doc.fontSize(8).fillColor('#445566').text('Presenta este QR en la entrada - Válido para un solo uso', 0, doc.page.height - 30, { align: 'center' });
+
+    doc.end();
+  });
 }
 
 async function sendTicketsEmail(to, order, tickets) {
@@ -40,125 +88,80 @@ async function sendTicketsEmail(to, order, tickets) {
     return { sent: false, reason: 'smtp_not_configured' };
   }
 
-  const from = process.env.SMTP_FROM || `808 PULSE <no-reply@808pulse.local>`;
   const BRAND = process.env.BRAND_NAME || '808 PULSE';
   const BRAND_COLOR = process.env.BRAND_COLOR || '#00ffff';
-  const ACCENT_BG = '#0b0f14';
   const TEXT_LIGHT = '#eafcff';
   const TEXT_MUTED = '#9cc9d3';
-
   const attachments = [];
 
-  // Try to attach brand logo by CID
+  const logoPath = process.env.BRAND_LOGO_PATH || path.resolve(__dirname, '..', '..', 'Menta sin fondo.png');
   let logoCid = null;
-  try {
-    const explicitPath = process.env.BRAND_LOGO_PATH && process.env.BRAND_LOGO_PATH.trim();
-    const fallbackPath = path.resolve(__dirname, '..', '..', 'Menta sin fondo.png');
-    const logoPath = explicitPath ? explicitPath : fallbackPath;
-    if (fs.existsSync(logoPath)) {
-      const logoBuffer = fs.readFileSync(logoPath);
-      const ext = path.extname(logoPath).replace('.', '') || 'png';
-      logoCid = 'brandlogo@808pulse';
-      attachments.push({ filename: `brand-logo.${ext}`, content: logoBuffer, contentType: `image/${ext}`, cid: logoCid });
-    }
-  } catch (e) {
-    console.warn('[EmailService] No se pudo cargar el logo de marca:', e.message);
+  if (fs.existsSync(logoPath)) {
+    const extension = path.extname(logoPath).substring(1);
+    logoCid = 'brandlogo@808pulse';
+    attachments.push({
+      filename: `logo.${extension}`,
+      path: logoPath,
+      cid: logoCid
+    });
   }
-  const ticketItemsHtml = tickets.map((t, i) => {
-    const att = dataUrlToAttachment(t.qrData, t.ticketId || 'ticket', i);
-    if (att) attachments.push(att);
-    const token = t.qrToken || (t.verifyUrl ? new URL(t.verifyUrl).pathname.split('/').pop() : '');
-    // Ticket card (responsive-friendly table layout)
-    return `
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px 0; background:${ACCENT_BG}; border:1px solid rgba(0,255,255,0.22); border-radius:14px; box-shadow:0 0 14px rgba(0,255,255,0.18);">
-        <tr>
-          <td style="padding:16px 16px 16px 16px; vertical-align:top;">
-            <div style="font-weight:700; font-size:15px; color:${TEXT_LIGHT}; line-height:1.3;">${t.ticketId || ''} — ${t.eventName || ''}</div>
-            <div style="font-size:12px; color:${TEXT_MUTED}; margin-top:6px;">Token: ${token}</div>
-            ${t.verifyUrl ? `
-              <div style="margin-top:10px;">
-                <a href="${t.verifyUrl}" style="display:inline-block; padding:8px 12px; background:${BRAND_COLOR}; color:#0a0f12; text-decoration:none; border-radius:8px; font-weight:600;">Verificar ticket</a>
-              </div>
-            ` : ''}
-          </td>
-          ${att ? `
-          <td align="right" style="padding:16px; vertical-align:middle;">
-            <img src="cid:${att.cid}" alt="QR" width="160" height="160" style="display:block; border-radius:10px; box-shadow:0 0 10px rgba(0,255,255,0.25);"/>
-          </td>` : ''}
-        </tr>
-      </table>
-    `;
-  }).join('');
+
+  // Generate individual PDFs for each ticket
+  for (let i = 0; i < tickets.length; i++) {
+    const ticket = tickets[i];
+    try {
+      const pdfBuffer = await generateTicketPDF(ticket, logoPath);
+      attachments.push({
+        filename: `Ticket-${ticket.ticketId || (i + 1)}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      });
+    } catch (err) {
+      console.error(`Error generating PDF for ticket ${ticket.ticketId}:`, err);
+    }
+  }
 
   const totalStr = (order.total || 0).toLocaleString('es-CO');
   const preheader = `Tus tickets para la orden ${order.orderId}`;
-  // Use the event flyer as watermark if provided by ticketService (first available)
-  const flyerUrl = (tickets && tickets.find(t => t.eventImage)?.eventImage) || null;
+
   const html = `
   <!DOCTYPE html>
   <html lang="es">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
     <title>${BRAND} - Tickets</title>
   </head>
-  <body style="margin:0; padding:0; background:#05090d;">
+  <body style="margin:0; padding:0; background:#05090d; font-family: sans-serif;">
     <div style="display:none; max-height:0; overflow:hidden; opacity:0;">${preheader}</div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#05090d; background-image: radial-gradient(circle at 1px 1px, rgba(0,255,255,0.035) 1px, transparent 1.2px); background-size: 14px 14px;">
+    <table width="100%" bgcolor="#05090d" cellpadding="0" cellspacing="0">
       <tr>
-        <td align="center" style="padding:24px 12px;">
-          <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="width:640px; max-width:100%; background:rgba(11,15,20,0.7); border:1px solid rgba(0,255,255,0.2); border-radius:16px; box-shadow:0 0 26px rgba(0,255,255,0.22); backdrop-filter: blur(8px);">
-            <!-- Neon Banner Strip -->
+        <td align="center" style="padding:40px 10px;">
+          <table width="600" cellpadding="0" cellspacing="0" style="background:#0b0f14; border:1px solid rgba(0,255,255,0.2); border-radius:16px;">
+            <tr><td style="height:5px; background:${BRAND_COLOR}; border-radius:16px 16px 0 0;"></td></tr>
             <tr>
-              <td style="height:8px; background:${BRAND_COLOR}; filter: drop-shadow(0 0 8px rgba(0,255,255,0.8)); border-top-left-radius:16px; border-top-right-radius:16px;"></td>
-            </tr>
-            <!-- Header -->
-            <tr>
-              <td align="center" style="padding:28px 20px; border-bottom:1px solid rgba(255,255,255,0.08); background: radial-gradient(120px 60px at 50% 0%, rgba(0,255,255,0.18), transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.02), transparent);">
-                ${logoCid ? `<img src="cid:${logoCid}" alt="${BRAND} Logo" height="72" style="display:block; margin:0 auto 12px auto; border-radius:10px; box-shadow:0 0 12px rgba(0,255,255,0.35);"/>` : ''}
-                <div style="font-size:28px; font-weight:800; color:${TEXT_LIGHT}; letter-spacing:0.5px; text-shadow:0 0 10px rgba(0,255,255,0.25);">${BRAND}</div>
-                <div style="margin-top:6px; font-size:13px; color:${TEXT_MUTED};">Tus tickets están listos</div>
-              </td>
-            </tr>
-            <!-- Watermark (very subtle) -->
-            ${flyerUrl ? `
-            <tr>
-              <td align="center" style="padding:0;">
-                <img src="${flyerUrl}" alt="Marca de agua del evento" height="220" style="display:block; margin:16px auto -12px auto; opacity:0.06; filter:saturate(75%);"/>
-              </td>
-            </tr>` : ''}
-            <!-- Greeting -->
-            <tr>
-              <td style="padding:20px 22px; color:${TEXT_LIGHT}; font-family:Arial, Helvetica, sans-serif;">
-                <div style="font-size:16px;">Hola ${order.customerName || ''},</div>
-                <p style="margin:8px 0 0; font-size:14px; color:${TEXT_MUTED}; line-height:1.6;">
-                  Gracias por tu compra. Presenta estos códigos QR en la entrada del evento. Te recomendamos mantener este correo a la mano el día del evento.
+              <td align="center" style="padding:30px;">
+                ${logoCid ? `<img src="cid:${logoCid}" height="60" style="margin-bottom:20px;">` : ''}
+                <h1 style="color:${TEXT_LIGHT}; margin:0; font-size:24px;">¡Hola ${order.customerName}!</h1>
+                <p style="color:${TEXT_MUTED}; font-size:16px; margin:15px 0;">
+                  Tus tickets para <strong>${BRAND}</strong> están listos. 
+                  Los hemos adjuntado a este correo como archivos PDF individuales.
+                </p>
+                <div style="background:rgba(0,255,255,0.05); border:1px dashed rgba(0,255,255,0.3); border-radius:10px; padding:20px; margin:20px 0;">
+                  <p style="color:${TEXT_LIGHT}; margin:5px 0;"><strong>Orden:</strong> ${order.orderId}</p>
+                  <p style="color:${TEXT_LIGHT}; margin:5px 0;"><strong>Total:</strong> $${totalStr}</p>
+                  <p style="color:${TEXT_LIGHT}; margin:5px 0;"><strong>Tickets adjuntos:</strong> ${tickets.length}</p>
+                </div>
+                <p style="color:${TEXT_MUTED}; font-size:14px;">
+                  Por favor, descarga los archivos PDF y presenta los códigos QR en la entrada del evento.
                 </p>
               </td>
             </tr>
-            <!-- Tickets list -->
             <tr>
-              <td style="padding:0 22px 10px 22px;">
-                ${ticketItemsHtml}
-              </td>
-            </tr>
-            <!-- Order footer -->
-            <tr>
-              <td style="padding:12px 22px 22px 22px; color:${TEXT_MUTED}; font-size:12px;">
-                <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; display:flex; justify-content:space-between;">
-                  <span>Orden: <strong style="color:${TEXT_LIGHT}">${order.orderId}</strong></span>
-                  <span>Total: <strong style="color:${TEXT_LIGHT}">$${totalStr}</strong></span>
-                </div>
-              </td>
-            </tr>
-            <!-- Help -->
-            <tr>
-              <td align="center" style="padding:0 22px 26px 22px;">
-                <a href="mailto:${process.env.SMTP_USER || 'soporte@808pulse.local'}" style="display:inline-block; padding:10px 16px; border:1px solid rgba(0,255,255,0.45); color:${TEXT_LIGHT}; text-decoration:none; border-radius:10px; box-shadow:0 0 10px rgba(0,255,255,0.2);">¿Necesitas ayuda?</a>
+              <td align="center" style="padding:20px; border-top:1px solid rgba(255,255,255,0.05);">
+                <p style="color:#445566; font-size:12px; margin:0;">808 PULSE - Electronic Events Platform</p>
               </td>
             </tr>
           </table>
-          <div style="color:${TEXT_MUTED}; font-size:11px; margin-top:12px;">Por favor no compartas tus códigos QR. Cada ticket es válido para una sola entrada.</div>
         </td>
       </tr>
     </table>
@@ -167,9 +170,9 @@ async function sendTicketsEmail(to, order, tickets) {
   `;
 
   const info = await transporter.sendMail({
-    from,
+    from: process.env.SMTP_FROM || `808 PULSE <no-reply@808pulse.local>`,
     to,
-    subject: `Tus tickets - Orden ${order.orderId}`,
+    subject: `Tus tickets (${tickets.length}) - Orden ${order.orderId}`,
     html,
     attachments
   });

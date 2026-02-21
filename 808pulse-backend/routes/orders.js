@@ -3,12 +3,15 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { Order, OrderItem } = require('../models/Order');
 const Event = require('../models/Event');
+const Ticket = require('../models/Ticket');
+const TicketService = require('../services/ticketService');
+const { sendTicketsEmail } = require('../services/emailService');
 
 // POST /api/orders - Create new order
 router.post('/', async (req, res) => {
     try {
         const { items, customerInfo } = req.body;
-        
+
         if (!items || items.length === 0) {
             return res.status(400).json({ message: 'Order must contain at least one item' });
         }
@@ -24,8 +27,8 @@ router.post('/', async (req, res) => {
             }
 
             if (!event.hasAvailableTickets(item.quantity)) {
-                return res.status(400).json({ 
-                    message: `Not enough tickets available for ${event.name}. Available: ${event.getAvailableTickets()}` 
+                return res.status(400).json({
+                    message: `Not enough tickets available for ${event.name}. Available: ${event.getAvailableTickets()}`
                 });
             }
 
@@ -113,11 +116,159 @@ router.get('/:orderId', async (req, res) => {
     }
 });
 
-// PUT /api/orders/:orderId/status - Update order status
+// PUT /api/orders/:orderId - Update order details
+router.put('/:orderId', async (req, res) => {
+    try {
+        const { customerInfo, status, items: updatedItems } = req.body;
+
+        const order = await Order.findOne({
+            where: { orderId: req.params.orderId },
+            include: [{ model: OrderItem, as: 'items' }]
+        });
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Update basic info
+        let emailChanged = false;
+        if (customerInfo) {
+            if (customerInfo.name !== undefined) order.customerName = customerInfo.name;
+            if (customerInfo.phone !== undefined) order.customerPhone = customerInfo.phone;
+            if (customerInfo.email !== undefined) {
+                if (customerInfo.email !== order.customerEmail) {
+                    emailChanged = true;
+                }
+                order.customerEmail = customerInfo.email;
+            }
+        }
+
+        if (status && ['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
+            // If status is changing TO cancelled, return tickets
+            if (status === 'cancelled' && order.status !== 'cancelled') {
+                for (const item of order.items) {
+                    await Event.increment('ticketsSold', {
+                        by: -item.quantity,
+                        where: { id: item.eventId }
+                    });
+                }
+            }
+            // If status is changing FROM cancelled, take tickets back
+            else if (status !== 'cancelled' && order.status === 'cancelled') {
+                for (const item of order.items) {
+                    await Event.increment('ticketsSold', {
+                        by: item.quantity,
+                        where: { id: item.eventId }
+                    });
+                }
+            }
+            order.status = status;
+        }
+
+        // Update items (quantities) and sync tickets
+        let orderChanged = emailChanged;
+        if (updatedItems && Array.isArray(updatedItems)) {
+            let newTotal = 0;
+            for (const updatedItem of updatedItems) {
+                const existingItem = order.items.find(i => i.id === updatedItem.id);
+                if (existingItem) {
+                    const quantityDiff = updatedItem.quantity - existingItem.quantity;
+
+                    if (quantityDiff !== 0) {
+                        orderChanged = true;
+                        // Check availability if increasing
+                        if (quantityDiff > 0) {
+                            const event = await Event.findByPk(existingItem.eventId);
+                            if (!event.hasAvailableTickets(quantityDiff)) {
+                                return res.status(400).json({
+                                    message: `Not enough tickets available for ${event.name}.`
+                                });
+                            }
+                        }
+
+                        // Update event inventory
+                        await Event.increment('ticketsSold', {
+                            by: quantityDiff,
+                            where: { id: existingItem.eventId }
+                        });
+
+                        // Update item
+                        existingItem.quantity = updatedItem.quantity;
+                        existingItem.subtotal = updatedItem.quantity * existingItem.price;
+                        await existingItem.save();
+
+                        // Sync Tickets
+                        if (order.status === 'confirmed') {
+                            if (quantityDiff > 0) {
+                                // Generate new tickets
+                                await TicketService.generateTickets(
+                                    order.id,
+                                    existingItem.eventId,
+                                    existingItem.eventName,
+                                    { name: order.customerName, phone: order.customerPhone },
+                                    quantityDiff
+                                );
+                            } else if (quantityDiff < 0) {
+                                // Remove unused tickets (active status)
+                                const ticketsToRemove = await Ticket.findAll({
+                                    where: {
+                                        orderId: order.id,
+                                        eventId: existingItem.eventId,
+                                        status: 'active'
+                                    },
+                                    limit: Math.abs(quantityDiff),
+                                    order: [['createdAt', 'DESC']]
+                                });
+                                for (const t of ticketsToRemove) {
+                                    await t.destroy();
+                                }
+                            }
+                        }
+                    }
+                    newTotal += Number(existingItem.subtotal);
+                }
+            }
+            order.total = newTotal;
+        }
+
+        await order.save();
+
+        // --- EMAIL RESEND LOGIC ---
+        // If anything important changed (email, quantity, or status became confirmed), resend tickets
+        if (order.status === 'confirmed' && order.customerEmail && orderChanged) {
+            try {
+                const tickets = await TicketService.getTicketsByOrder(order.id);
+                if (tickets && tickets.length > 0) {
+                    // Enrich tickets with event image (needed for email)
+                    for (const t of tickets) {
+                        const event = await Event.findByPk(t.eventId);
+                        if (event) t.setDataValue('eventImage', event.image);
+                    }
+                    await sendTicketsEmail(order.customerEmail, order, tickets);
+                    console.log(`[Orders] Tickets updated/resent to ${order.customerEmail} for order ${order.orderId}`);
+                }
+            } catch (emailError) {
+                console.error('[Orders] Error resending tickets email:', emailError);
+            }
+        }
+
+        // Refresh order data
+        const savedOrder = await Order.findByPk(order.id, {
+            include: [{ model: OrderItem, as: 'items' }]
+        });
+
+        res.json(savedOrder);
+    } catch (error) {
+        console.error('Error updating order:', error);
+        res.status(500).json({ message: 'Error updating order' });
+    }
+});
+
+// PUT /api/orders/:orderId/status - Update order status (legacy/minimal)
 router.put('/:orderId/status', async (req, res) => {
     try {
         const { status } = req.body;
-        
+
         if (!['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status' });
         }
@@ -132,7 +283,7 @@ router.put('/:orderId/status', async (req, res) => {
         }
 
         // If order is cancelled, return tickets to inventory
-        if (status === 'cancelled') {
+        if (status === 'cancelled' && order.status !== 'cancelled') {
             for (const item of order.items) {
                 await Event.increment('ticketsSold', {
                     by: -item.quantity,
@@ -153,14 +304,14 @@ router.put('/:orderId/status', async (req, res) => {
 router.post('/whatsapp', async (req, res) => {
     try {
         const { encodedData } = req.body;
-        
+
         if (!encodedData) {
             return res.status(400).json({ message: 'Encoded data is required' });
         }
 
         // Decode the order data
         const orderData = JSON.parse(Buffer.from(encodedData, 'base64').toString());
-        
+
         // Create order from decoded data
         const order = await Order.create({
             orderId: uuidv4(),

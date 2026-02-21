@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>808 PULSE - Electronic Music Events</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="icon" href="menta sin fondo.png" type="image/png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>808 PULSE - Electronic Music Events</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
+
 <body>
 
     <nav class="navbar">
@@ -25,12 +26,11 @@
                 <li><a href="#contact">Contacto</a></li>
             </ul>
             <!-- Botón Panel en header (solo con sesión) -->
-            <button id="go-admin-top-btn"
-            class="cta-button login-button ghost nav-panel-btn"
-            style="display:none; position: fixed; top: 14px; right: 72px; width:70px; padding:18px 0; font-size:14px; z-index: 1100;">
-      Panel
-    </button>
-    
+            <button id="go-admin-top-btn" class="cta-button login-button ghost nav-panel-btn"
+                style="display:none; position: fixed; top: 14px; right: 72px; width:70px; padding:18px 0; font-size:14px; z-index: 1100;">
+                Panel
+            </button>
+
 
 
             <div class="nav-cart-icon">
@@ -52,31 +52,63 @@
 
     <main>
         <!-- Floating Admin button bottom-left (hidden if logged in) -->
-        <button id="admin-login-btn" class="cta-button login-button ghost admin-fab" title="Panel de administración">Admin</button>
-        <script>
-    function toggleAccessibilityFunctions() {
-        document.body.classList.toggle('light-mode');
-        // Add any other accessibility functions here
-    }
-</script>
-        <button id="admin-logout-btn" class="cta-button login-button ghost admin-fab" style="display:none;" title="Cerrar sesión">Cerrar sesión</button>
+        <button id="admin-login-btn" class="cta-button login-button ghost admin-fab"
+            title="Panel de administración">Admin</button>
+        <button id="admin-logout-btn" class="cta-button login-button ghost admin-fab" style="display:none;"
+            title="Cerrar sesión">Cerrar sesión</button>
         <!-- Floating Go to Admin Panel button (only when logged in). Se ocultará si se muestra en el header -->
-        <button id="go-admin-btn" class="cta-button login-button ghost admin-fab" style="display:none; position: fixed; bottom: 56px; left: 16px;" title="Ir al panel">Panel</button>
+        <button id="go-admin-btn" class="cta-button login-button ghost admin-fab"
+            style="display:none; position: fixed; bottom: 56px; left: 16px;" title="Ir al panel">Panel</button>
 
         <section id="events" class="events-section">
             <h2>Próximos Eventos</h2>
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="event-search" placeholder="Busca tu próximo rave...">
+            </div>
             <div id="event-cards-container" class="event-cards-container">
-                </div>
+            </div>
         </section>
 
         <!-- NOSOTROS / ARTISTAS -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <section id="about" class="about-section">
-            
+
 
             <h2 style="margin-top: 50px; text-align: center; font-size: 40px;">
                 Nuestros Artistas
-              </h2>
-              
+            </h2>
+
 
             <div class="artists-grid">
                 <article class="artist-card">
@@ -85,12 +117,17 @@
                     </div>
                     <div class="artist-info">
                         <h3>R4MMY</h3>
-                        <p class="artist-role">Hard Groove / Hypnotic /  Hard Trance / Hard Hause</p>
-                        <p class="artist-bio"> DJ con un sonido hypnótico y líneas contundentes que rompen la pista. Sus sets exploran texturas acidas con una estética futurista.</p>
+                        <p class="artist-role">Hard Groove / Hypnotic / Hard Trance / Hard Hause</p>
+                        <p class="artist-bio"> DJ con un sonido hypnótico y líneas contundentes que rompen la pista. Sus
+                            sets exploran texturas acidas con una estética futurista.</p>
                         <div class="artist-cta">
-                            <a class="cta-mini" href="https://soundcloud.com/cristian-cam-lo/tracks" target="_blank" rel="noopener">Escuchar set</a>
-                            <a class="cta-mini ghost icon" href="https://www.instagram.com/r4mmy.99/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                            <a class="cta-mini" href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20R4mmy" target="_blank" rel="noopener">Booking</a>
+                            <a class="cta-mini" href="https://soundcloud.com/cristian-cam-lo/tracks" target="_blank"
+                                rel="noopener">Escuchar set</a>
+                            <a class="cta-mini ghost icon" href="https://www.instagram.com/r4mmy.99/" target="_blank"
+                                rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a class="cta-mini"
+                                href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20R4mmy"
+                                target="_blank" rel="noopener">Booking</a>
                         </div>
                     </div>
                 </article>
@@ -101,11 +138,17 @@
                     <div class="artist-info">
                         <h3>SANDOVAL DV</h3>
                         <p class="artist-role">Hard rave / Hard bounce / Hard Techno </p>
-                        <p class="artist-bio">Melodías envolventes, fuertes y percusiones cuidadas. Sandoval DV combina sensibilidad cinematográfica con energía pura para viajes sonoros inolvidables.</p>
+                        <p class="artist-bio">Melodías envolventes, fuertes y percusiones cuidadas. Sandoval DV combina
+                            sensibilidad cinematográfica con energía pura para viajes sonoros inolvidables.</p>
                         <div class="artist-cta">
-                            <a class="cta-mini" href="https://soundcloud.com/david-sandoval-621032413" target="_blank" rel="noopener">Escuchar set</a>
-                            <a class="cta-mini ghost icon" href="https://www.instagram.com/sandovaldv_dj/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                            <a class="cta-mini" href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20Sandoval%20DV" target="_blank" rel="noopener">Booking</a>
+                            <a class="cta-mini" href="https://soundcloud.com/david-sandoval-621032413" target="_blank"
+                                rel="noopener">Escuchar set</a>
+                            <a class="cta-mini ghost icon" href="https://www.instagram.com/sandovaldv_dj/"
+                                target="_blank" rel="noopener" aria-label="Instagram"><i
+                                    class="fab fa-instagram"></i></a>
+                            <a class="cta-mini"
+                                href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20Sandoval%20DV"
+                                target="_blank" rel="noopener">Booking</a>
                         </div>
                     </div>
                 </article>
@@ -116,31 +159,42 @@
                     <div class="artist-info">
                         <h3>SYPNASYS</h3>
                         <p class="artist-role">Neo rave / Industrial / Hard techno</p>
-                        <p class="artist-bio">Groove contundente, bajos profundos y ritmo imparable. Su selección mezcla clásicos con cuts underground que mantienen la pista en alto.</p>
+                        <p class="artist-bio">Groove contundente, bajos profundos y ritmo imparable. Su selección mezcla
+                            clásicos con cuts underground que mantienen la pista en alto.</p>
                         <div class="artist-cta">
-                            <a class="cta-mini" href="https://soundcloud.com/synapsys-l999l" target="_blank" rel="noopener">Escuchar set</a>
-                            <a class="cta-mini ghost icon" href="https://www.instagram.com/synapsys.99/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                            <a class="cta-mini" href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20Synapsys" target="_blank" rel="noopener">Booking</a>
+                            <a class="cta-mini" href="https://soundcloud.com/synapsys-l999l" target="_blank"
+                                rel="noopener">Escuchar set</a>
+                            <a class="cta-mini ghost icon" href="https://www.instagram.com/synapsys.99/" target="_blank"
+                                rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a class="cta-mini"
+                                href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20Synapsys"
+                                target="_blank" rel="noopener">Booking</a>
                         </div>
-                    </article>
-                        <article class="artist-card">
-                            <div class="artist-photo">
-                                <img src="Spock.jpeg" alt="Artista 3">
-                            </div>
-                            <div class="artist-info">
-                                <h3>SPOCK</h3>
-                                <p class="artist-role">Groove / Hard Groove / Acid Techno</p>
-                                <p class="artist-bio">DJ con una iniciativa sonora Underground donde el groove sostiene la pista y la atmósfera. Su propuesta se basa en la progresión, linea musical y la tensión bien medida, construyendo sesiones sólidas y coherentes.</p>
-                                <div class="artist-cta">
-                                    <a class="cta-mini" href="https://soundcloud.com/baldinho-sb" target="_blank" rel="noopener">Escuchar set</a>
-                                    <a class="cta-mini ghost icon" href="https://www.instagram.com/baldinh0000/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                                    <a class="cta-mini" href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20Spock" target="_blank" rel="noopener">Booking</a>
-                                </div>
-                            </div>
-                        </article>
+                    </div>
+                </article>
+                <article class="artist-card">
+                    <div class="artist-photo">
+                        <img src="Spock.jpeg" alt="Artista 3">
+                    </div>
+                    <div class="artist-info">
+                        <h3>SPOCK</h3>
+                        <p class="artist-role">Groove / Hard Groove / Acid Techno</p>
+                        <p class="artist-bio">DJ con una iniciativa sonora Underground donde el groove sostiene la pista
+                            y la atmósfera. Su propuesta se basa en la progresión, linea musical y la tensión bien
+                            medida, construyendo sesiones sólidas y coherentes.</p>
+                        <div class="artist-cta">
+                            <a class="cta-mini" href="https://soundcloud.com/baldinho-sb" target="_blank"
+                                rel="noopener">Escuchar set</a>
+                            <a class="cta-mini ghost icon" href="https://www.instagram.com/baldinh0000/" target="_blank"
+                                rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a class="cta-mini"
+                                href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20Spock"
+                                target="_blank" rel="noopener">Booking</a>
+                        </div>
                     </div>
                 </article>
             </div>
+        </section>
         </section>
     </main>
 
@@ -155,13 +209,15 @@
                     </div>
                     <span class="social-name">Instagram</span>
                 </a>
-                <a href="https://www.facebook.com/profile.php?id=61572292401431" class="social-link" target="_blank" rel="noopener">
+                <a href="https://www.facebook.com/profile.php?id=61572292401431" class="social-link" target="_blank"
+                    rel="noopener">
                     <div class="social-icon">
                         <i class="fab fa-facebook-f"></i>
                     </div>
                     <span class="social-name">Facebook</span>
                 </a>
-                <a href="https://www.tiktok.com/@808pulse5?_r=1&_t=ZS-93hdwxXJFFV" class="social-link" target="_blank" rel="noopener">
+                <a href="https://www.tiktok.com/@808pulse5?_r=1&_t=ZS-93hdwxXJFFV" class="social-link" target="_blank"
+                    rel="noopener">
                     <div class="social-icon">
                         <i class="fab fa-tiktok"></i>
                     </div>
@@ -204,9 +260,9 @@
     <!-- Edit Event Modal (Admin only) -->
     <div id="edit-event-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content" style="max-width: 600px; text-align:left;">
-            <button class="close-edit-event" aria-label="Cerrar" style="position:absolute; right:15px; top:10px; background:none; border:none; color:#fff; font-size:2rem; cursor:pointer;">&times;</button>
-            <button id="accessibility-btn" class="accessibility-button" title="Accesibilidad" aria-label="Accesibilidad" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background-color: #007bff; color: white; border: none; border-radius: 5px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" onclick="toggleAccessibilityFunctions()"><img src="path_to_accessibility_icon.png" alt="Accesibilidad" style="width: 20px; height: 20px;" /><img src="path_to_magnifying_glass_icon.png" alt="Lupa" style="width: 20px; height: 20px; margin-left: 5px;" /></button>
-            <h3 style="margin-bottom: 10px;">Editar Evento</h3>
+            <button class="close-edit-event" aria-label="Cerrar"
+                style="position:absolute; right:15px; top:10px; background:none; border:none; color:#fff; font-size:2rem; cursor:pointer;">&times;</button>
+            <h3>Editar Evento</h3>
             <form id="edit-event-form">
                 <input type="hidden" id="edit-event-id">
                 <div class="form-group">
@@ -250,7 +306,7 @@
         <button class="close-cart-btn">&times;</button>
         <h2>Tu Carrito</h2>
         <div id="cart-items-container">
-            </div>
+        </div>
         <div class="cart-summary">
             <p>Total: $<span id="cart-total">0</span></p>
             <button id="confirm-purchase-btn" class="cta-button">Confirmar Compra por WhatsApp</button>
@@ -262,12 +318,15 @@
         <div class="modal-content" style="max-width: 420px;">
             <button class="close-admin-login" aria-label="Cerrar">&times;</button>
             <h3>Acceso de Administrador</h3>
-            <p style="margin: 10px 0 15px; color:#555;">Ingresa la clave de superusuario para abrir el panel de administración.</p>
+            <p style="margin: 10px 0 15px; color:#555;">Ingresa la clave de superusuario para abrir el panel de
+                administración.</p>
             <div class="form-group">
                 <label for="admin-username">Usuario:</label>
-                <input type="text" id="admin-username" placeholder="admin" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; margin-bottom:10px;">
+                <input type="text" id="admin-username" placeholder="admin"
+                    style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; margin-bottom:10px;">
                 <label for="admin-password">Clave:</label>
-                <input type="password" id="admin-password" placeholder="••••••" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                <input type="password" id="admin-password" placeholder="••••••"
+                    style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
             </div>
             <button id="admin-login-submit" class="cta-button" style="width:100%;">Ingresar</button>
             <p id="admin-login-error" style="color:#b00020; margin-top:10px; display:none;">Credenciales inválidas.</p>
@@ -277,12 +336,12 @@
     <script src="script.js"></script>
     <script>
         // Toggle Admin/Login vs Logout buttons depending on session
-        (function(){
+        (function () {
             const loginBtn = document.getElementById('admin-login-btn');
             const logoutBtn = document.getElementById('admin-logout-btn');
             const panelBtn = document.getElementById('go-admin-btn');
             const panelTopBtn = document.getElementById('go-admin-top-btn');
-            const token = localStorage.getItem('adminToken');
+            const token = sessionStorage.getItem('adminToken');
             if (token) {
                 // Logged in: show logout, hide login; clicking logout clears token
                 loginBtn.style.display = 'none';
@@ -298,7 +357,7 @@
                     panelBtn.onclick = () => { window.location.href = '808pulse-backend/admin-panel.html'; };
                 }
                 logoutBtn.addEventListener('click', () => {
-                    localStorage.removeItem('adminToken');
+                    sessionStorage.removeItem('adminToken');
                     location.reload();
                 });
             } else {
@@ -310,7 +369,7 @@
             }
         })();
         // Login Admin (real backend auth)
-        (function(){
+        (function () {
             const OPEN_BTN = document.getElementById('admin-login-btn');
             const MODAL = document.getElementById('admin-login-modal');
             const CLOSE_BTN = document.querySelector('.close-admin-login');
@@ -319,20 +378,20 @@
             const PASS_INPUT = document.getElementById('admin-password');
             const ERROR_MSG = document.getElementById('admin-login-error');
 
-            function openModal(){ MODAL.style.display = 'flex'; PASS_INPUT.focus(); }
-            function closeModal(){ MODAL.style.display = 'none'; ERROR_MSG.style.display='none'; PASS_INPUT.value=''; }
+            function openModal() { MODAL.style.display = 'flex'; PASS_INPUT.focus(); }
+            function closeModal() { MODAL.style.display = 'none'; ERROR_MSG.style.display = 'none'; PASS_INPUT.value = ''; }
 
             OPEN_BTN.addEventListener('click', openModal);
             CLOSE_BTN.addEventListener('click', closeModal);
-            window.addEventListener('click', (e)=>{ if(e.target === MODAL) closeModal(); });
-            PASS_INPUT.addEventListener('keypress', (e)=>{ if(e.key === 'Enter') SUBMIT_BTN.click(); });
-            USER_INPUT.addEventListener('keypress', (e)=>{ if(e.key === 'Enter') SUBMIT_BTN.click(); });
+            window.addEventListener('click', (e) => { if (e.target === MODAL) closeModal(); });
+            PASS_INPUT.addEventListener('keypress', (e) => { if (e.key === 'Enter') SUBMIT_BTN.click(); });
+            USER_INPUT.addEventListener('keypress', (e) => { if (e.key === 'Enter') SUBMIT_BTN.click(); });
 
-            SUBMIT_BTN.addEventListener('click', async ()=>{
+            SUBMIT_BTN.addEventListener('click', async () => {
                 const username = USER_INPUT.value.trim() || 'admin';
                 const password = PASS_INPUT.value.trim();
-                ERROR_MSG.style.display='none';
-                if(!password){ ERROR_MSG.textContent='Ingresa la clave.'; ERROR_MSG.style.display='block'; return; }
+                ERROR_MSG.style.display = 'none';
+                if (!password) { ERROR_MSG.textContent = 'Ingresa la clave.'; ERROR_MSG.style.display = 'block'; return; }
                 try {
                     const resp = await fetch('http://localhost:3002/api/auth/login', {
                         method: 'POST',
@@ -340,20 +399,21 @@
                         body: JSON.stringify({ username, password })
                     });
                     const data = await resp.json();
-                    if(!resp.ok){
+                    if (!resp.ok) {
                         ERROR_MSG.textContent = data.message || 'Credenciales inválidas';
-                        ERROR_MSG.style.display='block';
+                        ERROR_MSG.style.display = 'block';
                         return;
                     }
-                    localStorage.setItem('adminToken', data.token);
+                    sessionStorage.setItem('adminToken', data.token);
                     // Redirigir al panel
                     window.location.href = './808pulse-backend/admin-panel.html';
-                } catch(err){
+                } catch (err) {
                     ERROR_MSG.textContent = 'Error de red al iniciar sesión';
-                    ERROR_MSG.style.display='block';
+                    ERROR_MSG.style.display = 'block';
                 }
             });
         })();
     </script>
 </body>
+
 </html>

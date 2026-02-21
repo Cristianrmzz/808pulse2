@@ -5,7 +5,7 @@ const { Order, OrderItem } = require('../models/Order');
 const Event = require('../models/Event');
 
 class TicketService {
-    
+
     // Generar tickets después de confirmar el pago
     static async generateTicketsForOrder(orderId, customerInfo) {
         try {
@@ -36,7 +36,7 @@ class TicketService {
                 if (!event) {
                     throw new Error(`Evento no encontrado (id=${item.eventId})`);
                 }
-                
+
                 // Generar la cantidad de tickets solicitada
                 for (let i = 0; i < item.quantity; i++) {
                     const ticketData = {
@@ -50,7 +50,7 @@ class TicketService {
 
                     const ticket = await Ticket.create(ticketData);
                     console.log('[TicketService] Ticket creado (sin QR):', ticket.ticketId);
-                    
+
                     // Generar datos del QR
                     const qrData = await this.generateQRData(ticket);
                     ticket.qrData = qrData;
@@ -101,7 +101,7 @@ class TicketService {
     // Verificar un ticket por su token QR
     static async verifyTicket(qrToken) {
         try {
-            const ticket = await Ticket.findOne({ 
+            const ticket = await Ticket.findOne({
                 where: { qrToken },
                 include: [
                     { model: Event, as: 'event' }
@@ -155,8 +155,8 @@ class TicketService {
             }
 
             if (!ticket.isValid()) {
-                return { 
-                    success: false, 
+                return {
+                    success: false,
                     message: ticket.status === 'used'
                         ? `QR ya utilizado por ${ticket.customerName} el ${new Date(ticket.usedAt).toLocaleString('es-ES')}`
                         : 'Ticket cancelado',
@@ -170,8 +170,8 @@ class TicketService {
 
             await ticket.markAsUsed();
 
-            return { 
-                success: true, 
+            return {
+                success: true,
                 message: 'Ticket utilizado exitosamente',
                 ticket: {
                     ticketId: ticket.ticketId,
@@ -201,6 +201,30 @@ class TicketService {
             console.error('Error obteniendo tickets:', error);
             throw error;
         }
+    }
+
+    // Generar un número específico de tickets para un evento y orden
+    static async generateTickets(orderId, eventId, eventName, customerInfo, quantity) {
+        const tickets = [];
+        const event = await Event.findByPk(eventId);
+        if (!event) throw new Error(`Evento no encontrado (id=${eventId})`);
+
+        for (let i = 0; i < quantity; i++) {
+            const ticketData = {
+                orderId: orderId,
+                eventId: eventId,
+                eventName: eventName,
+                customerName: customerInfo.name,
+                customerPhone: customerInfo.phone
+            };
+
+            const ticket = await Ticket.create(ticketData);
+            const qrData = await this.generateQRData(ticket);
+            ticket.qrData = qrData;
+            await ticket.save();
+            tickets.push(ticket);
+        }
+        return tickets;
     }
 }
 

@@ -51,8 +51,8 @@ router.post('/confirm-payment/:orderId', async (req, res) => {
         const { customerName, customerPhone, customerEmail } = req.body;
 
         if (!customerName || !customerPhone) {
-            return res.status(400).json({ 
-                message: 'Se requiere nombre y teléfono del cliente' 
+            return res.status(400).json({
+                message: 'Se requiere nombre y teléfono del cliente'
             });
         }
 
@@ -77,7 +77,13 @@ router.post('/confirm-payment/:orderId', async (req, res) => {
         let emailStatus = { sent: false };
         try {
             if (order.customerEmail) {
-                emailStatus = await sendTicketsEmail(order.customerEmail, order.toJSON(), tickets.map(t => t.toJSON ? t.toJSON() : t));
+                // Enrich tickets with event image (needed for email)
+                for (const t of tickets) {
+                    const event = await Event.findByPk(t.eventId);
+                    if (event) t.setDataValue('eventImage', event.image);
+                }
+                const emailResult = await sendTicketsEmail(order.customerEmail, order, tickets);
+                emailStatus = emailResult;
             }
         } catch (err) {
             console.error('[ADMIN] Error enviando tickets por email:', err);
@@ -191,7 +197,7 @@ router.get('/accounting', async (req, res) => {
             const toDate = new Date(to);
             if (!isNaN(fromDate) && !isNaN(toDate)) {
                 // incluir fin del día para 'to'
-                toDate.setHours(23,59,59,999);
+                toDate.setHours(23, 59, 59, 999);
                 orderDateWhere.createdAt = { [Op.between]: [fromDate, toDate] };
                 ticketDateWhere.createdAt = { [Op.between]: [fromDate, toDate] };
             }
@@ -204,7 +210,7 @@ router.get('/accounting', async (req, res) => {
         } else if (to) {
             const toDate = new Date(to);
             if (!isNaN(toDate)) {
-                toDate.setHours(23,59,59,999);
+                toDate.setHours(23, 59, 59, 999);
                 orderDateWhere.createdAt = { [Op.lte]: toDate };
                 ticketDateWhere.createdAt = { [Op.lte]: toDate };
             }
@@ -293,54 +299,54 @@ module.exports = router;
 // DELETE /api/admin/orders - Limpieza de órdenes por filtros
 // body: { status?: 'pending'|'confirmed', beforeDate?: ISOString, orderId?: string }
 router.delete('/orders', async (req, res) => {
-  const { status, beforeDate, orderId } = req.body || {};
-  const where = {};
-  if (orderId) where.orderId = orderId;
-  if (status) where.status = status;
-  if (beforeDate) {
-    const d = new Date(beforeDate);
-    if (!isNaN(d)) where.createdAt = { [Op.lt]: d };
-  }
-  const t = await sequelize.transaction();
-  try {
-    // Encontrar órdenes objetivo
-    const targets = await Order.findAll({ where, transaction: t });
-    const ids = targets.map(o => o.id);
-    if (!ids.length) {
-      await t.rollback();
-      return res.json({ deleted: 0 });
+    const { status, beforeDate, orderId } = req.body || {};
+    const where = {};
+    if (orderId) where.orderId = orderId;
+    if (status) where.status = status;
+    if (beforeDate) {
+        const d = new Date(beforeDate);
+        if (!isNaN(d)) where.createdAt = { [Op.lt]: d };
     }
-    // Eliminar tickets vinculados a esas órdenes
-    await Ticket.destroy({ where: { orderId: { [Op.in]: ids } }, transaction: t });
-    // Eliminar items
-    await OrderItem.destroy({ where: { orderId: { [Op.in]: ids } }, transaction: t });
-    // Eliminar órdenes
-    const deleted = await Order.destroy({ where: { id: { [Op.in]: ids } }, transaction: t });
-    await t.commit();
-    res.json({ deleted });
-  } catch (err) {
-    await t.rollback();
-    console.error('[ADMIN] cleanup orders failed:', err);
-    res.status(500).json({ message: 'Error limpiando órdenes' });
-  }
+    const t = await sequelize.transaction();
+    try {
+        // Encontrar órdenes objetivo
+        const targets = await Order.findAll({ where, transaction: t });
+        const ids = targets.map(o => o.id);
+        if (!ids.length) {
+            await t.rollback();
+            return res.json({ deleted: 0 });
+        }
+        // Eliminar tickets vinculados a esas órdenes
+        await Ticket.destroy({ where: { orderId: { [Op.in]: ids } }, transaction: t });
+        // Eliminar items
+        await OrderItem.destroy({ where: { orderId: { [Op.in]: ids } }, transaction: t });
+        // Eliminar órdenes
+        const deleted = await Order.destroy({ where: { id: { [Op.in]: ids } }, transaction: t });
+        await t.commit();
+        res.json({ deleted });
+    } catch (err) {
+        await t.rollback();
+        console.error('[ADMIN] cleanup orders failed:', err);
+        res.status(500).json({ message: 'Error limpiando órdenes' });
+    }
 });
 
 // DELETE /api/admin/tickets - Limpieza de tickets por filtros
 // body: { status?: 'active'|'used', beforeDate?: ISOString, eventId?: number }
 router.delete('/tickets', async (req, res) => {
-  const { status, beforeDate, eventId } = req.body || {};
-  const where = {};
-  if (status) where.status = status;
-  if (eventId) where.eventId = eventId;
-  if (beforeDate) {
-    const d = new Date(beforeDate);
-    if (!isNaN(d)) where.createdAt = { [Op.lt]: d };
-  }
-  try {
-    const deleted = await Ticket.destroy({ where });
-    res.json({ deleted });
-  } catch (err) {
-    console.error('[ADMIN] cleanup tickets failed:', err);
-    res.status(500).json({ message: 'Error limpiando tickets' });
-  }
+    const { status, beforeDate, eventId } = req.body || {};
+    const where = {};
+    if (status) where.status = status;
+    if (eventId) where.eventId = eventId;
+    if (beforeDate) {
+        const d = new Date(beforeDate);
+        if (!isNaN(d)) where.createdAt = { [Op.lt]: d };
+    }
+    try {
+        const deleted = await Ticket.destroy({ where });
+        res.json({ deleted });
+    } catch (err) {
+        console.error('[ADMIN] cleanup tickets failed:', err);
+        res.status(500).json({ message: 'Error limpiando tickets' });
+    }
 });
