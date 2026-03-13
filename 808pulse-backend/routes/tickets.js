@@ -10,8 +10,8 @@ router.post('/generate', async (req, res) => {
         const { orderId, customerInfo } = req.body;
 
         if (!orderId || !customerInfo || !customerInfo.name || !customerInfo.phone) {
-            return res.status(400).json({ 
-                message: 'Se requiere orderId y información del cliente (name, phone)' 
+            return res.status(400).json({
+                message: 'Se requiere orderId y información del cliente (name, phone)'
             });
         }
 
@@ -22,8 +22,8 @@ router.post('/generate', async (req, res) => {
         }
 
         if (order.status !== 'confirmed') {
-            return res.status(400).json({ 
-                message: 'La orden debe estar confirmada para generar tickets' 
+            return res.status(400).json({
+                message: 'La orden debe estar confirmada para generar tickets'
             });
         }
 
@@ -85,7 +85,8 @@ router.post('/use/:token', async (req, res) => {
         } else {
             res.status(400).json({
                 success: false,
-                message: result.message
+                message: result.message,
+                details: result.details // Añadido para mostrar info de uso previo
             });
         }
 
@@ -125,8 +126,8 @@ router.post('/confirm-payment', async (req, res) => {
         const { orderId, customerInfo, paymentProof } = req.body;
 
         if (!orderId || !customerInfo) {
-            return res.status(400).json({ 
-                message: 'Se requiere orderId y información del cliente' 
+            return res.status(400).json({
+                message: 'Se requiere orderId y información del cliente'
             });
         }
 

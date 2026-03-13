@@ -48,29 +48,28 @@ router.get('/orders', async (req, res) => {
 router.post('/confirm-payment/:orderId', async (req, res) => {
     try {
         const { orderId } = req.params;
-        const { customerName, customerPhone, customerEmail } = req.body;
-
-        if (!customerName || !customerPhone) {
-            return res.status(400).json({
-                message: 'Se requiere nombre y teléfono del cliente'
-            });
-        }
+        const { customerName, customerPhone, customerEmail } = req.body || {};
 
         const order = await Order.findByPk(orderId);
         if (!order) {
             return res.status(404).json({ message: 'Orden no encontrada' });
         }
 
+        // Si no se envían datos, usar los que ya tiene la orden
+        const finalName = customerName || order.customerName || 'Cliente';
+        const finalPhone = customerPhone || order.customerPhone || 'N/A';
+        const finalEmail = customerEmail || order.customerEmail || null;
+
         // Actualizar orden con información del cliente y confirmar pago
         await order.update({
             status: 'confirmed',
-            customerName,
-            customerPhone,
-            customerEmail: customerEmail || null
+            customerName: finalName,
+            customerPhone: finalPhone,
+            customerEmail: finalEmail
         });
 
         // Generar tickets con QR únicos
-        const customerInfo = { name: customerName, phone: customerPhone };
+        const customerInfo = { name: finalName, phone: finalPhone };
         const tickets = await TicketService.generateTicketsForOrder(orderId, customerInfo);
 
         // Enviar tickets por correo si hay email
@@ -151,6 +150,11 @@ router.post('/scan-ticket/:token', async (req, res) => {
     try {
         const { token } = req.params;
         const result = await TicketService.useTicket(token);
+
+        // Si falló pero es porque ya fue usado, asegurar que devolvemos 400 pero con la data
+        if (!result.success && result.message.includes('ya utilizado')) {
+            return res.status(400).json(result);
+        }
 
         res.json(result);
     } catch (error) {

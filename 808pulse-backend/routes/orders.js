@@ -40,7 +40,8 @@ router.post('/', async (req, res) => {
                 eventName: event.name,
                 quantity: item.quantity,
                 price: event.price,
-                subtotal: subtotal
+                subtotal: subtotal,
+                attendees: item.attendees || []
             });
         }
 
@@ -61,7 +62,8 @@ router.post('/', async (req, res) => {
                 eventName: item.eventName,
                 quantity: item.quantity,
                 price: item.price,
-                subtotal: item.subtotal
+                subtotal: item.subtotal,
+                attendees: item.attendees
             });
         }
 

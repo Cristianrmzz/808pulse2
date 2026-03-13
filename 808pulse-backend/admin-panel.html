@@ -642,6 +642,99 @@
             padding: 5px;
             text-align: center;
         }
+
+        /* MODERN TOAST NOTIFICATIONS */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: rgba(12, 16, 20, 0.9);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 12px;
+            color: #eafcff;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 300px;
+            max-width: 450px;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-icon {
+            font-size: 1.5rem;
+        }
+
+        .toast-success i {
+            color: #00ff80;
+            text-shadow: 0 0 10px rgba(0, 255, 128, 0.5);
+        }
+
+        .toast-error i {
+            color: #ff3333;
+            text-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
+        }
+
+        .toast-info i {
+            color: #00c9ff;
+            text-shadow: 0 0 10px rgba(0, 201, 255, 0.5);
+        }
+
+        .toast-content h4 {
+            margin: 0;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .toast-content p {
+            margin: 4px 0 0 0;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* CUSTOM ALERT MODAL IMPROVEMENTS */
+        #confirm-dialog .modal-content {
+            background: rgba(12, 16, 20, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 255, 0.2);
+            color: #eafcff;
+            text-align: center;
+            padding: 40px;
+        }
+
+        #confirm-message {
+            color: #eafcff !important;
+            font-size: 1.1rem;
+            margin: 20px 0 30px 0 !important;
+        }
+
+        .modal-icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+            font-size: 2.5rem;
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            color: var(--primary-color);
+        }
     </style>
 </head>
 
@@ -656,11 +749,11 @@
 
 
         <div class="tabs">
-            <button class="tab active" onclick="showTab('dashboard')">Dashboard</button>
-            <button class="tab" onclick="showTab('orders')">Órdenes</button>
-            <button class="tab" onclick="showTab('tickets')">Tickets</button>
-            <button class="tab" onclick="showTab('accounting')">Contabilidad</button>
-            <button class="tab" onclick="showTab('scanner')">Escáner QR</button>
+            <button class="tab active" onclick="showTab('dashboard', this)">Dashboard</button>
+            <button class="tab" onclick="showTab('orders', this)">Órdenes</button>
+            <button class="tab" onclick="showTab('tickets', this)">Tickets</button>
+            <button class="tab" onclick="showTab('accounting', this)">Contabilidad</button>
+            <button class="tab" onclick="showTab('scanner', this)">Escáner QR</button>
         </div>
 
         <div class="tab-content">
@@ -806,29 +899,7 @@
         </div>
     </div>
 
-    <!-- Modal for confirming payment -->
-    <div id="payment-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h3>Confirmar Pago</h3>
-            <form id="payment-form">
-                <input type="hidden" id="order-id">
-                <div class="form-group">
-                    <label>Nombre del Cliente:</label>
-                    <input type="text" id="customer-name" required>
-                </div>
-                <div class="form-group">
-                    <label>Teléfono:</label>
-                    <input type="tel" id="customer-phone" required>
-                </div>
-                <div class="form-group">
-                    <label>Email (opcional):</label>
-                    <input type="email" id="customer-email">
-                </div>
-                <button type="submit" class="btn btn-success">Confirmar Pago y Generar QRs</button>
-            </form>
-        </div>
-    </div>
+
 
     <!-- Modal to list tickets (used/active) - placed outside container to avoid clipping -->
     <div id="tickets-list-modal" class="modal" onclick="if(event.target.id==='tickets-list-modal'){closeTicketsList()}">
@@ -842,14 +913,19 @@
     <!-- Confirm Dialog Modal -->
     <div id="confirm-dialog" class="modal" style="display:none;">
         <div class="modal-content" style="max-width:420px;">
-            <h3 style="margin-bottom:10px;">Confirmar acción</h3>
-            <p id="confirm-message" style="margin-bottom:16px; color:#334155;">¿Estás seguro?</p>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button id="confirm-no" class="btn">No</button>
-                <button id="confirm-yes" class="btn btn-primary">Sí</button>
+            <div id="confirm-icon-container" class="modal-icon-circle">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3 id="confirm-title" style="margin-bottom:10px;">Confirmar acción</h3>
+            <p id="confirm-message" style="margin-bottom:16px;">¿Estás seguro?</p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button id="confirm-no" class="btn" style="min-width: 100px;">No</button>
+                <button id="confirm-yes" class="btn btn-primary" style="min-width: 100px;">Sí</button>
             </div>
         </div>
     </div>
+
+    <div id="toast-container" class="toast-container"></div>
 
     <!-- QR Scanner Library (ES Module) -->
     <script type="module">
@@ -858,7 +934,8 @@
         window.QrScanner = QrScanner;
     </script>
     <script>
-        const API_BASE = 'http://localhost:3002/api';
+        const API_HOSTNAME = window.location.hostname || 'localhost';
+        const API_BASE = `http://${API_HOSTNAME}:3002/api`;
         // --- Auth helpers ---
         function getToken() { return sessionStorage.getItem('adminToken'); }
         function authHeaders() {
@@ -911,12 +988,25 @@
         }
 
         // Tab functionality
-        function showTab(tabName) {
+        function showTab(tabName, el) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
 
-            event.target.classList.add('active');
-            document.getElementById(tabName).classList.add('active');
+            // If el is provided, use it, otherwise find the button by its onclick/text
+            if (el) {
+                el.classList.add('active');
+            } else {
+                const tabs = document.querySelectorAll('.tab');
+                for (let t of tabs) {
+                    if (t.getAttribute('onclick')?.includes(`'${tabName}'`)) {
+                        t.classList.add('active');
+                        break;
+                    }
+                }
+            }
+
+            const pane = document.getElementById(tabName);
+            if (pane) pane.classList.add('active');
 
             // Load data for the selected tab
             switch (tabName) {
@@ -1007,7 +1097,7 @@
                         </div>
                         <div class="order-actions" style="margin-top: 15px; display: flex; gap: 10px;">
                             ${order.status === 'pending' ? `
-                                <button class="btn btn-success" onclick="confirmPayment(${order.id})">
+                                <button class="btn btn-success" onclick="confirmPayment(${order.id}, event)">
                                     Confirmar Pago
                                 </button>
                             ` : ''}
@@ -1177,15 +1267,50 @@
             await loadDashboard();
         }
 
+        // --- Notification helpers ---
+        function showToast(title, message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+
+            toast.innerHTML = `
+                <div class="toast-icon"><i class="fas fa-${icon}"></i></div>
+                <div class="toast-content">
+                    <h4>${title}</h4>
+                    <p>${message}</p>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Auto remove
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, duration);
+        }
+
         // Helper para mostrar confirm dialog
-        function confirmDialog(message) {
+        function confirmDialog(message, title = 'Confirmar acción', icon = 'question-circle') {
             return new Promise((resolve) => {
                 const modal = document.getElementById('confirm-dialog');
-                const msg = document.getElementById('confirm-message');
+                const titleEl = document.getElementById('confirm-title');
+                const msgEl = document.getElementById('confirm-message');
+                const iconContainer = document.getElementById('confirm-icon-container');
                 const yes = document.getElementById('confirm-yes');
                 const no = document.getElementById('confirm-no');
-                msg.textContent = message || '¿Estás seguro?';
-                console.log('[ADMIN UI] Opening confirm dialog:', msg.textContent);
+
+                titleEl.textContent = title;
+                msgEl.textContent = message || '¿Estás seguro?';
+                iconContainer.innerHTML = `<i class="fas fa-${icon}"></i>`;
+
                 modal.style.display = 'block';
                 const cleanup = () => { modal.style.display = 'none'; yes.onclick = null; no.onclick = null; };
                 yes.onclick = () => { cleanup(); resolve(true); };
@@ -1304,66 +1429,65 @@
             document.getElementById('tickets-list-modal').style.display = 'none';
         }
 
-        // Confirm payment modal
-        function confirmPayment(orderId) {
-            document.getElementById('order-id').value = orderId;
-            document.getElementById('payment-modal').style.display = 'block';
-        }
-
-        function closeModal() {
-            document.getElementById('payment-modal').style.display = 'none';
-        }
-
-        // Handle payment confirmation
-        document.getElementById('payment-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const orderId = document.getElementById('order-id').value;
-            const customerName = document.getElementById('customer-name').value;
-            const customerPhone = document.getElementById('customer-phone').value;
-            const customerEmail = document.getElementById('customer-email').value;
+        // Confirm payment directly
+        async function confirmPayment(orderId, btnEvent) {
+            const ok = await confirmDialog(
+                `¿Confirmar el pago para la orden #${orderId}? Se generarán los tickets y se enviarán al cliente.`,
+                'Confirmar Pago',
+                'credit-card'
+            );
+            if (!ok) return;
 
             try {
+                const btn = (btnEvent && btnEvent.target) || (window.event && window.event.target);
+                const originalText = btn ? btn.textContent : '';
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                }
+
                 const response = await fetchWithAuth(`${API_BASE}/admin/confirm-payment/${orderId}`, {
                     method: 'POST',
-                    body: JSON.stringify({
-                        customerName,
-                        customerPhone,
-                        customerEmail
-                    })
+                    body: JSON.stringify({})
                 });
 
                 const data = await response.json().catch(() => ({ message: 'Respuesta inválida del servidor' }));
 
                 if (response.ok) {
-                    alert('Pago confirmado y tickets generados exitosamente!');
-                    closeModal();
-                    loadOrders(); // Refresh orders
+                    showToast('¡Éxito!', 'Pago confirmado y tickets enviados correctamente por correo.', 'success');
 
-                    // Show generated QR codes
-                    showGeneratedTickets(data.tickets);
+                    showTab('orders');
+                    loadDashboard();
                 } else {
-                    console.error('[ADMIN UI] Error confirmando pago:', data);
-                    alert('Error: ' + (data.message || 'Error confirmando pago') + (data.details ? `\nDetalles: ${data.details}` : ''));
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                    showToast('Error', data.message || 'No se pudo confirmar el pago', 'error');
                 }
             } catch (error) {
-                console.error('Error confirming payment:', error);
-                alert('Error confirmando pago');
+                console.error('Error:', error);
+                showToast('Error fatal', 'Ocurrió un error al procesar la confirmación', 'error');
             }
-        });
+        }
+
+        function closeModal() {
+            // Ya no es necesario si el modal fue eliminado, pero lo mantenemos por si acaso hay referencias
+            const modal = document.getElementById('payment-modal');
+            if (modal) modal.style.display = 'none';
+        }
 
         // Show generated tickets with QR codes
         function showGeneratedTickets(tickets) {
             const ticketsHtml = tickets.map(ticket => {
                 const token = ticket.qrToken || (ticket.verifyUrl ? (new URL(ticket.verifyUrl)).pathname.split('/').pop() : null);
                 return `
-                <div class="qr-container">
-                    <h4>${ticket.ticketId}</h4>
-                    <p>${ticket.eventName}</p>
-                    <img src="${ticket.qrData}" alt="QR Code" class="qr-code">
+                <div class="qr-container" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(0,255,255,0.2); border-radius: 12px; margin-bottom: 20px; padding: 15px;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 8px;">${ticket.ticketId}</h4>
+                    <p style="margin-bottom: 8px;">${ticket.eventName}</p>
+                    <img src="${ticket.qrData}" alt="QR Code" class="qr-code" style="max-width: 150px; filter: drop-shadow(0 0 5px rgba(0,255,255,0.3));">
                     <p><small>Expira: ${new Date(ticket.expiresAt).toLocaleString('es-ES')}</small></p>
-                    ${token ? `<p><small>Token: <code>${token}</code> <button class="btn" onclick=\"navigator.clipboard.writeText('${token}').then(()=>alert('Token copiado'))\">Copiar</button></small></p>` : ''}
-                    <p><small>Verificar en: ${ticket.verifyUrl}</small></p>
+                    ${token ? `<p style="margin-top: 8px;"><small>Token: <code>${token}</code> <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick=\"navigator.clipboard.writeText('${token}').then(()=>alert('Token copiado'))\">Copiar</button></small></p>` : ''}
                 </div>
             `}).join('');
 
@@ -1379,32 +1503,45 @@
             if (newWindow && newWindow.document) {
                 newWindow.document.write(`
                     <html>
-                        <head><title>Tickets Generados</title></head>
-                        <body style="font-family: Arial, sans-serif; padding: 20px;">
-                            <h2>Tickets Generados</h2>
+                        <head>
+                            <title>Tickets Generados</title>
+                            <style>
+                                body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0a0a0a; color: #eafcff; padding: 40px; text-align: center; }
+                                .qr-container { background: #111; border: 1px solid #00FFFF; border-radius: 16px; padding: 20px; margin: 20px auto; max-width: 400px; }
+                                .qr-code { max-width: 200px; }
+                                code { background: #222; padding: 2px 5px; border-radius: 4px; color: #00FFFF; }
+                                button { background: #00FFFF; color: #000; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+                            </style>
+                        </head>
+                        <body>
+                            <h2>Tickets Generados Exitosamente</h2>
                             ${ticketsHtml}
-                            <button onclick="window.print()">Imprimir</button>
+                            <button onclick="window.print()">Imprimir Tickets</button>
                         </body>
                     </html>
                 `);
                 return;
             }
 
-            // Fallback: renderizar dentro de la pestaña "Tickets"
-            console.warn('[ADMIN UI] No se pudo abrir ventana nueva. Mostrando tickets en la pestaña Tickets.');
-            showTab('tickets');
-            const ticketsContainer = document.getElementById('tickets-container');
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = `
-                <div class="order-card confirmed">
-                    <h3 style="margin-bottom:10px;">Tickets generados</h3>
+            // Fallback: Mostrar en el modal existente en lugar de cambiar de pestaña
+            const titleEl = document.getElementById('tickets-list-title');
+            const bodyEl = document.getElementById('tickets-list-body');
+            const modal = document.getElementById('tickets-list-modal');
+
+            titleEl.textContent = 'Tickets Generados';
+            bodyEl.innerHTML = `
+                <div style="text-align: center; padding: 10px;">
+                    <p style="color: #00ff80; margin-bottom: 20px; font-weight: bold;">
+                        <i class="fas fa-check-circle"></i> Los tickets han sido generados y enviados por correo.
+                    </p>
                     ${ticketsHtml}
-                    <div style="text-align:center; margin-top:10px;">
-                        <button class="btn btn-primary" onclick="window.print()">Imprimir</button>
-                    </div>
+                    <button class="btn btn-primary" onclick="window.print()">Imprimir</button>
+                    <button class="btn" onclick="closeTicketsList()" style="margin-left: 10px;">Cerrar</button>
                 </div>
             `;
-            ticketsContainer.prepend(wrapper);
+
+            modal.style.display = 'block';
+            console.log('[ADMIN UI] Mostrando tickets en modal fallback.');
         }
 
         // Verificación reutilizable (GET)
@@ -1416,6 +1553,8 @@
                 }
                 if (typeof token !== 'string') throw new Error('Token inválido');
                 token = token.trim();
+
+                console.log(`[SCANNER] Verificando token: ${token} en ${API_BASE}/tickets/verify/...`);
                 const verifyResp = await fetch(`${API_BASE}/tickets/verify/${encodeURIComponent(token)}`);
                 const verifyData = await verifyResp.json();
 
@@ -1433,6 +1572,7 @@
                                     <p><strong>Ticket:</strong> ${verifyData.ticket.ticketId}</p>
                                     <p><strong>Evento:</strong> ${verifyData.ticket.eventName}</p>
                                     <p><strong>Cliente:</strong> ${verifyData.ticket.customerName}</p>
+                                    <p><strong>Cédula:</strong> ${verifyData.ticket.customerCedula || 'No disponible'}</p>
                                 </div>
                             </div>
                         `;
@@ -1445,6 +1585,7 @@
                                     <p><strong>Ticket:</strong> ${verifyData.ticket.ticketId}</p>
                                     <p><strong>Evento:</strong> ${verifyData.ticket.eventName}</p>
                                     <p><strong>Cliente:</strong> ${verifyData.ticket.customerName}</p>
+                                    <p><strong>Cédula:</strong> ${verifyData.ticket.customerCedula || 'No disponible'}</p>
                                 </div>
                             </div>
                         `;
@@ -1459,12 +1600,12 @@
                     `;
                 }
             } catch (error) {
-                console.error('Error verifying ticket:', error);
+                console.error('[SCANNER] Error verificando ticket:', error);
                 resultDiv.innerHTML = `
                     <div class="scan-alert scan-alert-invalid">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Error de sistema</h3>
-                        <p>No se pudo verificar el ticket en este momento</p>
+                        <h3>Error de conexión</h3>
+                        <p>No se pudo conectar con el servidor en ${API_BASE}. Revisa tu conexión.</p>
                     </div>
                 `;
             }
@@ -1479,7 +1620,12 @@
                 }
                 if (typeof token !== 'string') throw new Error('Token inválido');
                 token = token.trim();
-                const useResp = await fetch(`${API_BASE}/tickets/use/${encodeURIComponent(token)}`, { method: 'POST' });
+
+                console.log(`[SCANNER] Intentando marcar como usado: ${token} en ${API_BASE}/admin/scan-ticket/...`);
+                const useResp = await fetchWithAuth(`${API_BASE}/admin/scan-ticket/${encodeURIComponent(token)}`, {
+                    method: 'POST'
+                });
+                // Como fetchWithAuth ya maneja errores de auth, aquí procesamos el resultado normal
                 const useData = await useResp.json();
 
                 if (useResp.ok && useData.success) {
@@ -1494,6 +1640,7 @@
                                 <p><strong>Ticket:</strong> ${useData.ticket.ticketId}</p>
                                 <p><strong>Evento:</strong> ${useData.ticket.eventName || ''}</p>
                                 <p><strong>Cliente:</strong> ${useData.ticket.customerName || ''}</p>
+                                <p><strong>Cédula:</strong> ${useData.ticket.customerCedula || 'No disponible'}</p>
                             </div>
                             <div id="cooldown-container">
                                 <div class="cooldown-progress-container">
@@ -1507,7 +1654,7 @@
                 } else {
                     const details = useData && useData.details ? useData.details : null;
                     const usedAtStr = details && details.usedAt ? new Date(details.usedAt).toLocaleString('es-ES') : '';
-                    const isUsed = (useData && typeof useData.message === 'string' && useData.message.toLowerCase().startsWith('qr ya utilizado')) || !!usedAtStr;
+                    const isUsed = (useData && typeof useData.message === 'string' && useData.message.toLowerCase().includes('ya utilizado')) || !!usedAtStr;
 
                     if (isUsed) {
                         resultDiv.innerHTML = `
@@ -1516,9 +1663,10 @@
                                 <h3>QR ya utilizado</h3>
                                 <p>Este ticket ya fue validado anteriormente</p>
                                 <div class="scan-details">
-                                    ${details.customerName ? `<p><strong>Cliente:</strong> ${details.customerName}</p>` : ''}
-                                    ${usedAtStr ? `<p><strong>Escaneado el:</strong> ${usedAtStr}</p>` : ''}
-                                    ${details.ticketId ? `<p><strong>Ticket:</strong> ${details.ticketId}</p>` : ''}
+                                    <p><strong>Cliente:</strong> ${details ? details.customerName : 'No disponible'}</p>
+                                    <p><strong>Cédula:</strong> ${details ? details.customerCedula || 'No disponible' : 'No disponible'}</p>
+                                    <p><strong>Escaneado el:</strong> ${usedAtStr || 'No disponible'}</p>
+                                    <p><strong>Ticket:</strong> ${details ? details.ticketId : 'No disponible'}</p>
                                 </div>
                                 <div id="cooldown-container">
                                     <div class="cooldown-progress-container">
@@ -1541,12 +1689,12 @@
                     }
                 }
             } catch (err) {
-                console.error('Error usando ticket:', err);
+                console.error('[SCANNER] Error usando ticket:', err);
                 resultDiv.innerHTML = `
                     <div class="scan-alert scan-alert-invalid">
                         <i class="fas fa-exclamation-triangle"></i>
                         <h3>Error de conexión</h3>
-                        <p>No se pudo procesar la solicitud</p>
+                        <p>No se pudo conectar con el servidor en ${API_BASE}. Revisa tu conexión Wi-Fi o si el backend está activo.</p>
                     </div>
                 `;
                 return { success: false, alreadyUsed: false };

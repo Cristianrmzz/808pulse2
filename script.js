@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- CONFIGURACIÓN DE LA API ---
-    const API_BASE_URL = 'http://localhost:3002/api';
+    const API_HOSTNAME = window.location.hostname || 'localhost';
+    const API_BASE_URL = `http://${API_HOSTNAME}:3002/api`;
 
     // --- DATOS DE LOS EVENTOS (Ahora se cargan desde la API) ---
     let eventsData = [];
 
-    // --- VARIABLES Y ELEMENTOS DEL DOM ---
     // --- VARIABLES Y ELEMENTOS DEL DOM ---
     const eventCardsContainer = document.getElementById('event-cards-container');
     const eventSearchInput = document.getElementById('event-search');
@@ -354,21 +354,285 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- CONFIRMACIÓN DE COMPRA ---
-    confirmPurchaseBtn.addEventListener('click', async () => {
-        if (cart.length === 0) return;
+    // --- LÓGICA DE VISTAS DEL CARRITO ---
+    const cartItemsView = document.getElementById('cart-items-view');
+    const checkoutView = document.getElementById('checkout-view');
+    const goToCheckoutBtn = document.getElementById('go-to-checkout-btn');
+    const backToCartBtn = document.getElementById('back-to-cart-btn');
+    const checkoutForm = document.getElementById('checkout-form');
+    const checkoutTotalSpan = document.getElementById('checkout-total');
 
-        let orderItems = cart.map(item => `- ${item.name} (${item.quantity}x)`).join('%0A');
-        const total = cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    if (goToCheckoutBtn) {
+        goToCheckoutBtn.addEventListener('click', () => {
+            if (cart.length === 0) return;
+            cartItemsView.style.display = 'none';
+            checkoutView.style.display = 'flex';
 
-        const message = `¡Hola 808 Pulse! 🔥%0A%0AQuiero realizar el siguiente pedido:%0A${orderItems}%0A%0A*Total: $${total.toLocaleString('es-CO')}*%0A%0A¿Cómo puedo proceder con el pago?`;
-        window.open(`https://wa.me/573212490163?text=${message}`, '_blank');
+            let totalItems = 0;
+            let total = 0;
+            cart.forEach(item => {
+                totalItems += item.quantity;
+                total += (item.quantity * item.price);
+            });
 
-        // Opcional: Limpiar carrito tras compra
-        // cart = []; saveCart(); updateCart();
-    });
+            checkoutTotalSpan.textContent = total.toLocaleString('es-CO');
+
+            const attendeesContainer = document.getElementById('attendees-container');
+            if (attendeesContainer) {
+                attendeesContainer.innerHTML = ''; // Limpiar campos previos
+
+                if (totalItems >= 2) {
+                    const notice = document.createElement('p');
+                    notice.style.fontSize = '14px';
+                    notice.style.color = '#00ffff';
+                    notice.style.marginBottom = '15px';
+                    notice.innerText = 'Por favor, ingresa los datos de cada asistente. Cada entrada será personalizada.';
+                    attendeesContainer.appendChild(notice);
+
+                    let ticketCounter = 1;
+
+                    cart.forEach(item => {
+                        for (let i = 0; i < item.quantity; i++) {
+                            const groupDiv = document.createElement('div');
+                            groupDiv.style.background = 'rgba(255, 255, 255, 0.05)';
+                            groupDiv.style.padding = '15px';
+                            groupDiv.style.borderRadius = '8px';
+                            groupDiv.style.marginBottom = '15px';
+                            groupDiv.style.border = '1px solid rgba(0, 255, 255, 0.1)';
+
+                            groupDiv.innerHTML = `
+                                <h4 style="margin-top: 0; color: #eafcff; font-size: 15px; margin-bottom: 15px;">Entrada ${ticketCounter} - ${item.name}</h4>
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="att-name-${item.id}-${i}" style="font-size: 13px;">Nombre del Asistente</label>
+                                    <input type="text" id="att-name-${item.id}-${i}" class="attendee-name-input" data-event-id="${item.id}" data-index="${i}" required placeholder="Ej: Maria Lopez" pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$" title="Solo letras">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="att-doc-${item.id}-${i}" style="font-size: 13px;">Cédula o Documento</label>
+                                    <input type="text" id="att-doc-${item.id}-${i}" class="attendee-doc-input" data-event-id="${item.id}" data-index="${i}" required placeholder="Ej: 1000123456" pattern="^[0-9]+$" title="Solo números permitidos">
+                                </div>
+                            `;
+                            attendeesContainer.appendChild(groupDiv);
+                            ticketCounter++;
+                        }
+                    });
+
+                    // Añadir lógica en tiempo real para quitar letras de la cédula y números del nombre
+                    document.querySelectorAll('.attendee-name-input').forEach(input => {
+                        input.addEventListener('input', (e) => e.target.value = e.target.value.replace(/[0-9]/g, ''));
+                    });
+                    document.querySelectorAll('.attendee-doc-input').forEach(input => {
+                        input.addEventListener('input', (e) => e.target.value = e.target.value.replace(/\\D/g, ''));
+                    });
+                }
+            }
+        });
+    }
+
+    if (backToCartBtn) {
+        backToCartBtn.addEventListener('click', () => {
+            checkoutView.style.display = 'none';
+            cartItemsView.style.display = 'block';
+        });
+    }
+
+    // --- VALIDACIONES DE FORMULARIO ---
+    const nameInput = document.getElementById('customer-name');
+    const docInput = document.getElementById('customer-doc');
+    const phoneInput = document.getElementById('customer-phone');
+
+    if (nameInput) {
+        nameInput.addEventListener('input', (e) => {
+            // Eliminar cualquier número del nombre en tiempo real
+            e.target.value = e.target.value.replace(/[0-9]/g, '');
+
+            // Si existen asistentes múltiples, sincronizar el primero con el nombre del comprador
+            const firstAttendeeNameInput = document.querySelector('.attendee-name-input');
+            if (firstAttendeeNameInput) {
+                firstAttendeeNameInput.value = e.target.value;
+            }
+        });
+    }
+
+    if (docInput) {
+        docInput.addEventListener('input', (e) => {
+            // Permitir solo números
+            e.target.value = e.target.value.replace(/\D/g, '');
+
+            // Sincronizar la cédula de la primera entrada con el documento proporcionado aquí
+            const firstAttendeeDocInput = document.querySelector('.attendee-doc-input');
+            if (firstAttendeeDocInput) {
+                firstAttendeeDocInput.value = e.target.value;
+            }
+        });
+    }
+
+    if (phoneInput) {
+        phoneInput.addEventListener('input', (e) => {
+            // Permitir solo números y máximo 10 caracteres
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+        });
+    }
+
+    // --- CONFIRMACIÓN DE COMPRA (BACKEND + WHATSAPP) ---
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (cart.length === 0) return;
+
+            const name = document.getElementById('customer-name').value.trim();
+            const doc = document.getElementById('customer-doc').value.trim();
+            const email = document.getElementById('customer-email').value.trim();
+            const phone = document.getElementById('customer-phone').value.trim();
+
+            // Validaciones Explícitas
+            if (/\d/.test(name)) {
+                alert('El nombre no puede contener números.');
+                return;
+            }
+
+            if (!email.includes('@')) {
+                alert('Por favor, ingresa un correo electrónico válido.');
+                return;
+            }
+
+            if (phone.length !== 10) {
+                alert('El teléfono debe tener exactamente 10 dígitos.');
+                return;
+            }
+
+            const confirmBtn = document.getElementById('confirm-purchase-btn');
+            const originalBtnText = confirmBtn.textContent;
+
+            try {
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = 'Procesando...';
+
+                const customerInfo = { name, cedula: doc, email, phone };
+
+                // Recolectar asistentes
+                const totalTickets = cart.reduce((sum, item) => sum + item.quantity, 0);
+                const orderItemsPayload = cart.map(item => {
+                    const attendees = [];
+                    if (totalTickets >= 2) {
+                        for (let i = 0; i < item.quantity; i++) {
+                            const attNameInput = document.getElementById(`att-name-${item.id}-${i}`);
+                            const attDocInput = document.getElementById(`att-doc-${item.id}-${i}`);
+                            if (attNameInput && attDocInput) {
+                                attendees.push({
+                                    name: attNameInput.value.trim(),
+                                    cedula: attDocInput.value.trim()
+                                });
+                            }
+                        }
+                    }
+                    return {
+                        eventId: item.id,
+                        quantity: item.quantity,
+                        attendees: attendees
+                    };
+                });
+
+                const orderPayload = {
+                    items: orderItemsPayload,
+                    customerInfo
+                };
+
+                console.log('Enviando orden al backend:', orderPayload);
+
+                const response = await fetch(`${API_BASE_URL}/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderPayload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Error al crear la orden');
+                }
+
+                const savedOrder = await response.json();
+                console.log('Orden creada exitosamente:', savedOrder);
+
+                // Preparar mensaje para WhatsApp
+                const orderItemsText = cart.map(item => `- ${item.name} (${item.quantity}x)`).join('\n');
+                const totalAmount = cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+
+                const rawMessage = `¡Hola 808 Pulse! 👋\n\nAcabo de realizar un pedido en la web (Orden #${savedOrder.orderId}).\n\n*Detalles de mi pedido:*\n${orderItemsText}\n\n*Total a pagar: $${totalAmount.toLocaleString('es-CO')}*\n\nMe gustaría saber cuáles son los *métodos de pago disponibles* para confirmar mi entrada. 🎫\n\n*Mis Datos:*\n- Nombre: ${customerInfo.name}\n- Email: ${customerInfo.email}\n- Tel: ${customerInfo.phone}`;
+
+                const encodedMessage = encodeURIComponent(rawMessage);
+
+                // Limpiar carrito
+                cart = [];
+                saveCart();
+                updateCart();
+
+                // Reset vista
+                checkoutView.style.display = 'none';
+                cartItemsView.style.display = 'block';
+                closeCart();
+
+                // Abrir WhatsApp solo cuando el usuario haga clic en "Entendido"
+                const whatsappUrl = `https://wa.me/573212490163?text=${encodedMessage}`;
+
+                const successModal = document.getElementById('success-modal');
+                const successBtn = document.getElementById('success-modal-btn');
+
+                successModal.style.display = 'flex';
+
+                successBtn.onclick = () => {
+                    successModal.style.display = 'none';
+                    // Intentar abrir en nueva pestaña, si falla (bloqueador), abrir en la misma
+                    const newWin = window.open(whatsappUrl, '_blank');
+                    if (!newWin || newWin.closed || typeof newWin.closed == 'undefined') {
+                        window.location.href = whatsappUrl;
+                    }
+                };
+
+            } catch (error) {
+                console.error('Error en el checkout:', error);
+                alert('Hubo un error al procesar tu pedido: ' + error.message);
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = originalBtnText;
+            }
+        });
+    }
 
     // --- INICIALIZACIÓN ---
     fetchEvents();
     updateCart();
+
+    // --- ANIMACIONES DE REVELACIÓN (Scroll) ---
+    const revealOptions = {
+        threshold: 0.15,
+        rootMargin: "0px 0px -50px 0px"
+    };
+
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, revealOptions);
+
+    // Observar elementos estáticos
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // Observar cambios en el contenedor de eventos para animar cards dinámicas
+    const containerForEvents = document.getElementById('event-cards-container');
+    if (containerForEvents) {
+        const mutationObserver = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1 && node.classList.contains('event-card')) {
+                        node.classList.add('reveal');
+                        setTimeout(() => revealObserver.observe(node), 10);
+                    }
+                });
+            });
+        });
+        mutationObserver.observe(containerForEvents, { childList: true });
+    }
 });

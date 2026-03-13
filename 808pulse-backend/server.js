@@ -14,6 +14,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from the root project directory (where images are)
+const path = require('path');
+app.use(express.static(path.join(__dirname, '..')));
+
 // Routes
 app.use('/api/events', require('./routes/events'));
 app.use('/api/orders', require('./routes/orders'));
@@ -23,7 +27,7 @@ app.use('/api/admin', require('./routes/admin'));
 
 // Basic route
 app.get('/', (req, res) => {
-    res.json({ 
+    res.json({
         message: '808 PULSE Backend API',
         version: '1.0.0',
         database: 'MySQL',

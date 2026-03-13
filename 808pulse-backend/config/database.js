@@ -25,10 +25,10 @@ const connectDB = async () => {
     try {
         await sequelize.authenticate();
         console.log('✅ MySQL Database connected successfully');
-        
-        // Sync all models and apply non-destructive alterations to match models
-        // This updates columns like Ticket.expiresAt to allow NULL when the model changes
-        await sequelize.sync({ alter: true });
+
+        // Sync all models without alter to prevent Too Many Keys Error
+        // The new columns were already successfully created before
+        await sequelize.sync();
         console.log('✅ Database models synchronized');
     } catch (error) {
         console.error('❌ Database connection error:', error);

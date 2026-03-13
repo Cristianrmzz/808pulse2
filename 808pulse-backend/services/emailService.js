@@ -20,62 +20,176 @@ function createTransport() {
 
 /**
  * Generates a PDF buffer for a single ticket
+ * Optimized for a single A5 page with a professional "Electronic Music" aesthetic
  */
 async function generateTicketPDF(ticket, brandLogoPath) {
+  // Try to get event details if not present
+  let eventDate = 'Consultar fecha';
+  let eventLocation = 'Por confirmar';
+
+  // If the ticket has an event object attached (from an include)
+  if (ticket.event) {
+    if (ticket.event.date) eventDate = new Date(ticket.event.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    if (ticket.event.location) eventLocation = ticket.event.location;
+  } else {
+    // Fallback if event is not attached (should ideally be attached before calling this)
+    try {
+      const Event = require('../models/Event');
+      const event = await Event.findByPk(ticket.eventId);
+      if (event) {
+        eventDate = new Date(event.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        eventLocation = event.location;
+      }
+    } catch (err) {
+      console.warn('Could not fetch event details for PDF', err);
+    }
+  }
+
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'A5', margin: 30 });
+    // Use A5 but portrait and tight controls
+    const doc = new PDFDocument({
+      size: 'A5',
+      margin: 0,
+      info: {
+        Title: `Ticket ${ticket.eventName}`,
+        Author: '808 PULSE',
+      }
+    });
+
     const buffers = [];
     doc.on('data', buffers.push.bind(buffers));
     doc.on('end', () => resolve(Buffer.concat(buffers)));
     doc.on('error', reject);
 
-    const BRAND_COLOR = process.env.BRAND_COLOR || '#00ffff';
-    const BG_COLOR = '#05090d';
-    const CARD_BG = '#0b0f14';
+    // Design System
+    const BRAND_COLOR = process.env.BRAND_COLOR || '#00ffff'; // Neon Cyan
+    const BG_COLOR = '#05090d'; // Deep Dark
+    const CARD_BG = '#0b0f14'; // Slightly lighter dark
+    const TEXT_LIGHT = '#eafcff';
+    const TEXT_MUTED = '#9cc9d3';
 
-    // Background
-    doc.rect(0, 0, doc.page.width, doc.page.height).fill(BG_COLOR);
+    const width = doc.page.width;
+    const height = doc.page.height;
 
-    // Header Border
-    doc.rect(0, 0, doc.page.width, 10).fill(BRAND_COLOR);
+    // 1. Background
+    doc.rect(0, 0, width, height).fill(BG_COLOR);
 
-    // Logo
+    // 2. Side Accent Bar
+    doc.rect(0, 0, 8, height).fill(BRAND_COLOR);
+
+    // 3. Header Section (Logo only - Centered & Proportional)
+    const margin = 30;
+    let currentY = 15;
+
     try {
       if (brandLogoPath && fs.existsSync(brandLogoPath)) {
-        doc.image(brandLogoPath, doc.page.width / 2 - 40, 30, { height: 60 });
+        // Use fit to maintain aspect ratio and center horizontally
+        doc.image(brandLogoPath, 0, currentY, {
+          fit: [width, 50],
+          align: 'center'
+        });
+      } else {
+        doc.fillColor(BRAND_COLOR)
+          .fontSize(22)
+          .font('Helvetica-Bold')
+          .text('808', 0, currentY + 10, { align: 'center', width: width, characterSpacing: 3 });
       }
     } catch (e) {
-      console.error('Error adding logo to PDF:', e);
+      console.error('Error drawing logo:', e);
     }
 
-    doc.moveDown(5);
+    // 4. Main Event Card
+    currentY = 80;
+    const cardHeight = 460;
+    const cardWidth = width - (margin * 2);
 
-    // Brand Name
-    doc.fillColor(BRAND_COLOR).fontSize(24).text('808 PULSE', { align: 'center', characterSpacing: 2 });
-    doc.fillColor('#eafcff').fontSize(10).text('Tu acceso a la música electrónica', { align: 'center' });
+    // Subtle Outer Glow
+    doc.roundedRect(margin - 4, currentY - 4, cardWidth + 8, cardHeight + 8, 14).fill('rgba(0,255,255,0.02)');
+    doc.roundedRect(margin, currentY, cardWidth, cardHeight, 10).fill(CARD_BG);
 
-    doc.moveDown(2);
+    // Gradient-like border
+    doc.roundedRect(margin, currentY, cardWidth, cardHeight, 10).lineWidth(1).stroke('rgba(0,255,255,0.25)');
 
-    // Ticket Card
-    const cardTop = doc.y;
-    doc.roundedRect(40, cardTop, doc.page.width - 80, 260, 15).fill(CARD_BG);
-    doc.roundedRect(40, cardTop, doc.page.width - 80, 260, 15).lineWidth(1).stroke('rgba(0,255,255,0.3)');
+    // Event Title (Centered)
+    currentY += 30;
+    doc.fillColor(TEXT_LIGHT)
+      .fontSize(22)
+      .font('Helvetica-Bold')
+      .text(ticket.eventName ? ticket.eventName.toUpperCase() : 'EVENTO', margin + 10, currentY, {
+        width: cardWidth - 20,
+        align: 'center',
+        height: 55,
+        ellipsis: true
+      });
 
-    // QR Code
+    // Divider with centered pulses
+    currentY += 60;
+    const dividerWidth = cardWidth - 80;
+    const dividerX = (width / 2) - (dividerWidth / 2);
+
+    doc.circle(dividerX, currentY, 2).fill(BRAND_COLOR);
+    doc.moveTo(dividerX + 5, currentY)
+      .lineTo(dividerX + dividerWidth - 5, currentY)
+      .lineWidth(0.5)
+      .stroke('rgba(0, 255, 255, 0.4)');
+    doc.circle(dividerX + dividerWidth, currentY, 2).fill(BRAND_COLOR);
+
+    // Event Details (Strictly Centered)
+    currentY += 20;
+    doc.fillColor(TEXT_MUTED).fontSize(8).font('Helvetica').text('FECHA Y HORA', 0, currentY, { align: 'center', width: width });
+    currentY += 12;
+    doc.fillColor(TEXT_LIGHT).fontSize(12).font('Helvetica-Bold').text(eventDate.toUpperCase(), 0, currentY, { align: 'center', width: width });
+
+    currentY += 25;
+    doc.fillColor(TEXT_MUTED).fontSize(8).font('Helvetica').text('UBICACIÓN', 0, currentY, { align: 'center', width: width });
+    currentY += 12;
+    doc.fillColor(TEXT_LIGHT).fontSize(11).font('Helvetica-Bold').text(eventLocation.toUpperCase(), 0, currentY, { align: 'center', width: width });
+
+    // 5. QR Code Section (Large & Centered)
+    currentY += 40;
+    const qrSize = 160;
+    const qrX = (width / 2) - (qrSize / 2);
+
+    // QR Window 
+    doc.roundedRect(qrX - 15, currentY - 15, qrSize + 30, qrSize + 30, 12).fill('#000000');
+    doc.roundedRect(qrX - 15, currentY - 15, qrSize + 30, qrSize + 30, 12).lineWidth(1).stroke('rgba(0, 255, 255, 0.5)');
+
+    // QR White background for maximum scanability
+    doc.rect(qrX - 5, currentY - 5, qrSize + 10, qrSize + 10).fill('#ffffff');
+
     const qrMatch = /^data:(.+);base64,(.+)$/.exec(ticket.qrData || '');
     if (qrMatch) {
       const qrBuffer = Buffer.from(qrMatch[2], 'base64');
-      doc.image(qrBuffer, doc.page.width / 2 - 75, cardTop + 20, { width: 150 });
+      doc.image(qrBuffer, qrX, currentY, { width: qrSize });
     }
 
-    // Info
-    doc.fillColor('#eafcff').fontSize(14).text(ticket.eventName || 'Evento', 50, cardTop + 185, { align: 'center', width: doc.page.width - 100 });
-    doc.fillColor('#9cc9d3').fontSize(10).text(`Ticket ID: ${ticket.ticketId}`, { align: 'center' });
-    doc.moveDown(0.5);
-    doc.fillColor('#eafcff').fontSize(11).text(`Cliente: ${ticket.customerName}`, { align: 'center' });
+    // 6. Ticket Identification Info (Centered)
+    currentY += qrSize + 40;
+    doc.fillColor(TEXT_MUTED).fontSize(7).font('Helvetica').text('TICKET ID', 0, currentY, { align: 'center', width: width });
+    currentY += 10;
+    doc.fillColor(BRAND_COLOR).fontSize(11).font('Helvetica-Bold').text(ticket.ticketId, 0, currentY, { align: 'center', width: width });
 
-    // Footer info
-    doc.fontSize(8).fillColor('#445566').text('Presenta este QR en la entrada - Válido para un solo uso', 0, doc.page.height - 30, { align: 'center' });
+    currentY += 20;
+    doc.fillColor(TEXT_MUTED).fontSize(7).font('Helvetica').text('ASISTENTE', 0, currentY, { align: 'center', width: width });
+    currentY += 10;
+
+    let assistantText = ticket.customerName.toUpperCase();
+    if (ticket.customerCedula) {
+      assistantText += ` (C.C. ${ticket.customerCedula})`;
+    }
+
+    doc.fillColor(TEXT_LIGHT).fontSize(13).font('Helvetica-Bold').text(assistantText, 0, currentY, { align: 'center', width: width });
+
+    // 7. Footer / Terms
+    doc.fontSize(7)
+      .fillColor('#445566')
+      .font('Helvetica')
+      .text('Válido para un solo ingreso. Presenta este QR en la entrada.', 0, height - 35, { align: 'center', width: width });
+
+    doc.fillColor(BRAND_COLOR)
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .text('808', 0, height - 20, { align: 'center', width: width, characterSpacing: 5 });
 
     doc.end();
   });
@@ -121,6 +235,33 @@ async function sendTicketsEmail(to, order, tickets) {
     }
   }
 
+  // Extract unique events from tickets to show their flyers
+  const uniqueEvents = [];
+  const eventIds = new Set();
+
+  for (const t of tickets) {
+    const eventId = t.eventId;
+    if (!eventIds.has(eventId)) {
+      eventIds.add(eventId);
+      // Try to get event details from the ticket object or its attached event object
+      uniqueEvents.push({
+        name: t.eventName || 'Evento',
+        image: t.getDataValue ? t.getDataValue('eventImage') : (t.event ? t.event.image : null),
+        description: t.event ? t.event.description : ''
+      });
+    }
+  }
+
+  const flyersHtml = uniqueEvents.map(ev => `
+    <div style="margin-bottom: 30px; border-radius: 12px; overflow: hidden; background: #111821; border: 1px solid rgba(0,255,255,0.1);">
+      ${ev.image ? `<img src="${ev.image}" alt="${ev.name}" style="width: 100%; display: block; border-bottom: 2px solid ${BRAND_COLOR};">` : ''}
+      <div style="padding: 20px; text-align: left;">
+        <h2 style="color: ${TEXT_LIGHT}; margin: 0 0 10px 0; font-size: 18px;">${ev.name.toUpperCase()}</h2>
+        ${ev.description ? `<p style="color: ${TEXT_MUTED}; font-size: 14px; line-height: 1.5; margin: 0;">${ev.description}</p>` : ''}
+      </div>
+    </div>
+  `).join('');
+
   const totalStr = (order.total || 0).toLocaleString('es-CO');
   const preheader = `Tus tickets para la orden ${order.orderId}`;
 
@@ -131,7 +272,7 @@ async function sendTicketsEmail(to, order, tickets) {
     <meta charset="UTF-8">
     <title>${BRAND} - Tickets</title>
   </head>
-  <body style="margin:0; padding:0; background:#05090d; font-family: sans-serif;">
+  <body style="margin:0; padding:0; background:#05090d; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
     <div style="display:none; max-height:0; overflow:hidden; opacity:0;">${preheader}</div>
     <table width="100%" bgcolor="#05090d" cellpadding="0" cellspacing="0">
       <tr>
@@ -140,25 +281,35 @@ async function sendTicketsEmail(to, order, tickets) {
             <tr><td style="height:5px; background:${BRAND_COLOR}; border-radius:16px 16px 0 0;"></td></tr>
             <tr>
               <td align="center" style="padding:30px;">
-                ${logoCid ? `<img src="cid:${logoCid}" height="60" style="margin-bottom:20px;">` : ''}
-                <h1 style="color:${TEXT_LIGHT}; margin:0; font-size:24px;">¡Hola ${order.customerName}!</h1>
-                <p style="color:${TEXT_MUTED}; font-size:16px; margin:15px 0;">
-                  Tus tickets para <strong>${BRAND}</strong> están listos. 
-                  Los hemos adjuntado a este correo como archivos PDF individuales.
+                ${logoCid ? `<img src="cid:${logoCid}" height="50" style="margin-bottom:30px;">` : ''}
+                
+                <h1 style="color:${TEXT_LIGHT}; margin:0; font-size:26px; font-weight: bold;">¡TU ACCESO ESTÁ LISTO!</h1>
+                <p style="color:${TEXT_MUTED}; font-size:16px; margin:15px 0 30px 0;">
+                  Hola <strong>${order.customerName}</strong>, gracias por tu compra. Tus tickets han sido generados exitosamente.
                 </p>
-                <div style="background:rgba(0,255,255,0.05); border:1px dashed rgba(0,255,255,0.3); border-radius:10px; padding:20px; margin:20px 0;">
-                  <p style="color:${TEXT_LIGHT}; margin:5px 0;"><strong>Orden:</strong> ${order.orderId}</p>
-                  <p style="color:${TEXT_LIGHT}; margin:5px 0;"><strong>Total:</strong> $${totalStr}</p>
-                  <p style="color:${TEXT_LIGHT}; margin:5px 0;"><strong>Tickets adjuntos:</strong> ${tickets.length}</p>
+
+                <!-- Flyer Section -->
+                ${flyersHtml}
+
+                <div style="background:rgba(0,255,255,0.03); border:1px dashed rgba(0,255,255,0.2); border-radius:12px; padding:25px; margin:30px 0; text-align: left;">
+                  <h3 style="color:${BRAND_COLOR}; margin: 0 0 15px 0; font-size: 14px; letter-spacing: 1px;">DETALLES DE LA COMPRA</h3>
+                  <p style="color:${TEXT_LIGHT}; margin:5px 0; font-size: 15px;"><strong>Orden:</strong> #${order.orderId.substring(0, 8).toUpperCase()}</p>
+                  <p style="color:${TEXT_LIGHT}; margin:5px 0; font-size: 15px;"><strong>Total Pagado:</strong> $${totalStr}</p>
+                  <p style="color:${TEXT_LIGHT}; margin:5px 0; font-size: 15px;"><strong>Cantidad:</strong> ${tickets.length} ticket(s)</p>
                 </div>
-                <p style="color:${TEXT_MUTED}; font-size:14px;">
-                  Por favor, descarga los archivos PDF y presenta los códigos QR en la entrada del evento.
+
+                <div style="background: ${BRAND_COLOR}; color: #000; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 14px; margin-bottom: 25px;">
+                  LOS TICKETS ESTÁN ADJUNTOS EN ESTE CORREO COMO PDF
+                </div>
+
+                <p style="color:${TEXT_MUTED}; font-size:13px; line-height: 1.6;">
+                  Busca los archivos adjuntos en este email. Cada PDF contiene un código QR único que deberás presentar en la entrada (digital o impreso).
                 </p>
               </td>
             </tr>
             <tr>
-              <td align="center" style="padding:20px; border-top:1px solid rgba(255,255,255,0.05);">
-                <p style="color:#445566; font-size:12px; margin:0;">808 PULSE - Electronic Events Platform</p>
+              <td align="center" style="padding:30px; border-top:1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2); border-radius: 0 0 16px 16px;">
+                <p style="color:#445566; font-size:12px; margin:0; letter-spacing: 2px;">808 PULSE - ELECTRONIC MUSIC EVENTS</p>
               </td>
             </tr>
           </table>

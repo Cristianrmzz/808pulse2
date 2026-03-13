@@ -91,6 +91,10 @@ const OrderItem = sequelize.define('OrderItem', {
         validate: {
             min: 0
         }
+    },
+    attendees: {
+        type: DataTypes.JSON,
+        allowNull: true
     }
 }, {
     tableName: 'order_items',

@@ -39,11 +39,16 @@ class TicketService {
 
                 // Generar la cantidad de tickets solicitada
                 for (let i = 0; i < item.quantity; i++) {
+                    const attendee = (item.attendees && item.attendees[i]) ? item.attendees[i] : {};
+                    const finalName = attendee.name || customerInfo.name;
+                    const finalCedula = attendee.cedula || customerInfo.cedula || null;
+
                     const ticketData = {
                         orderId: order.id,
                         eventId: item.eventId,
                         eventName: item.eventName,
-                        customerName: customerInfo.name,
+                        customerName: finalName,
+                        customerCedula: finalCedula,
                         customerPhone: customerInfo.phone,
                         eventDate: event.date
                     };
@@ -61,6 +66,8 @@ class TicketService {
 
                     // No marcar como usado automáticamente: se deshabilita solo al primer escaneo
 
+                    // Attach event for use in PDF generation later
+                    ticket.event = event;
                     tickets.push(ticket);
                 }
             }
@@ -80,6 +87,7 @@ class TicketService {
             eventId: ticket.eventId,
             eventName: ticket.eventName,
             customerName: ticket.customerName,
+            customerCedula: ticket.customerCedula,
             verifyUrl: `${process.env.BASE_URL || 'http://localhost:3000'}/api/tickets/verify/${ticket.qrToken}`
         };
 
@@ -122,6 +130,7 @@ class TicketService {
                     message: `QR ya utilizado por ${ticket.customerName}`,
                     details: {
                         customerName: ticket.customerName,
+                        customerCedula: ticket.customerCedula,
                         usedAt: ticket.usedAt,
                         ticketId: ticket.ticketId
                     }
@@ -134,6 +143,7 @@ class TicketService {
                     ticketId: ticket.ticketId,
                     eventName: ticket.eventName,
                     customerName: ticket.customerName,
+                    customerCedula: ticket.customerCedula,
                     status: ticket.status,
                     used: ticket.status === 'used',
                     usedAt: ticket.usedAt || null
@@ -160,11 +170,13 @@ class TicketService {
                     message: ticket.status === 'used'
                         ? `QR ya utilizado por ${ticket.customerName} el ${new Date(ticket.usedAt).toLocaleString('es-ES')}`
                         : 'Ticket cancelado',
-                    details: ticket.status === 'used' ? {
+                    details: {
                         customerName: ticket.customerName,
+                        customerCedula: ticket.customerCedula,
                         usedAt: ticket.usedAt,
-                        ticketId: ticket.ticketId
-                    } : undefined
+                        ticketId: ticket.ticketId,
+                        eventName: ticket.eventName
+                    }
                 };
             }
 
@@ -177,6 +189,7 @@ class TicketService {
                     ticketId: ticket.ticketId,
                     eventName: ticket.eventName,
                     customerName: ticket.customerName,
+                    customerCedula: ticket.customerCedula,
                     usedAt: ticket.usedAt
                 }
             };
@@ -204,17 +217,22 @@ class TicketService {
     }
 
     // Generar un número específico de tickets para un evento y orden
-    static async generateTickets(orderId, eventId, eventName, customerInfo, quantity) {
+    static async generateTickets(orderId, eventId, eventName, customerInfo, quantity, attendees = []) {
         const tickets = [];
         const event = await Event.findByPk(eventId);
         if (!event) throw new Error(`Evento no encontrado (id=${eventId})`);
 
         for (let i = 0; i < quantity; i++) {
+            const attendee = attendees[i] ? attendees[i] : {};
+            const finalName = attendee.name || customerInfo.name;
+            const finalCedula = attendee.cedula || customerInfo.cedula || null;
+
             const ticketData = {
                 orderId: orderId,
                 eventId: eventId,
                 eventName: eventName,
-                customerName: customerInfo.name,
+                customerName: finalName,
+                customerCedula: finalCedula,
                 customerPhone: customerInfo.phone
             };
 

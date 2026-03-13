@@ -16,7 +16,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-left">
-                <a href="#" class="nav-logo">
+                <a href="#" class="nav-logo pulse-logo">
                     <img src="menta sin fondo.png" alt="808 Pulse Logo">
                 </a>
             </div>
@@ -60,7 +60,7 @@
         <button id="go-admin-btn" class="cta-button login-button ghost admin-fab"
             style="display:none; position: fixed; bottom: 56px; left: 16px;" title="Ir al panel">Panel</button>
 
-        <section id="events" class="events-section">
+        <section id="events" class="events-section reveal">
             <h2>Próximos Eventos</h2>
             <div class="search-container">
                 <i class="fas fa-search"></i>
@@ -105,13 +105,13 @@
         <section id="about" class="about-section">
 
 
-            <h2 style="margin-top: 50px; text-align: center; font-size: 40px;">
+            <h2 class="reveal" style="margin-top: 50px; text-align: center; font-size: 40px;">
                 Nuestros Artistas
             </h2>
 
 
             <div class="artists-grid">
-                <article class="artist-card">
+                <article class="artist-card reveal">
                     <div class="artist-photo">
                         <img src="r4mmy.jpeg" alt="Artista 1">
                     </div>
@@ -131,7 +131,7 @@
                         </div>
                     </div>
                 </article>
-                <article class="artist-card">
+                <article class="artist-card reveal">
                     <div class="artist-photo">
                         <img src="sandoval.jpeg" alt="Artista 3">
                     </div>
@@ -152,7 +152,7 @@
                         </div>
                     </div>
                 </article>
-                <article class="artist-card">
+                <article class="artist-card reveal">
                     <div class="artist-photo">
                         <img src="sypnasys.jpeg" alt="Artista 3">
                     </div>
@@ -172,7 +172,7 @@
                         </div>
                     </div>
                 </article>
-                <article class="artist-card">
+                <article class="artist-card reveal">
                     <div class="artist-photo">
                         <img src="Spock.jpeg" alt="Artista 3">
                     </div>
@@ -198,7 +198,7 @@
         </section>
     </main>
 
-    <section id="contact" class="contact-section">
+    <section id="contact" class="contact-section reveal">
         <div class="social-card">
             <h2>Conéctate con Nosotros</h2>
             <p>Síguenos en nuestras redes para estar al tanto de los próximos eventos y novedades.</p>
@@ -304,12 +304,45 @@
 
     <div id="cart-sidebar" class="cart-sidebar">
         <button class="close-cart-btn">&times;</button>
-        <h2>Tu Carrito</h2>
-        <div id="cart-items-container">
+        <div id="cart-items-view">
+            <h2>Tu Carrito</h2>
+            <div id="cart-items-container">
+            </div>
+            <div class="cart-summary">
+                <p>Total: $<span id="cart-total">0</span></p>
+                <button id="go-to-checkout-btn" class="cta-button">Continuar al Pago</button>
+            </div>
         </div>
-        <div class="cart-summary">
-            <p>Total: $<span id="cart-total">0</span></p>
-            <button id="confirm-purchase-btn" class="cta-button">Confirmar Compra por WhatsApp</button>
+
+        <div id="checkout-view" style="display: none;">
+            <button id="back-to-cart-btn" class="back-btn"><i class="fas fa-arrow-left"></i> Volver al Carrito</button>
+            <h2>Finalizar Compra</h2>
+            <form id="checkout-form">
+                <div class="form-group">
+                    <label for="customer-name">Nombre Completo</label>
+                    <input type="text" id="customer-name" required placeholder="Ej: Juan Pérez"
+                        pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" title="El nombre solo debe contener letras.">
+                </div>
+                <div class="form-group">
+                    <label for="customer-email">Correo Electrónico</label>
+                    <input type="email" id="customer-email" required placeholder="juan@ejemplo.com">
+                </div>
+                <div class="form-group">
+                    <label for="customer-doc">Cédula o Documento</label>
+                    <input type="text" id="customer-doc" required placeholder="Ej: 1000123456" pattern="^[0-9]+$"
+                        title="Solo números permitidos">
+                </div>
+                <div class="form-group">
+                    <label for="customer-phone">Teléfono / WhatsApp</label>
+                    <input type="tel" id="customer-phone" required placeholder="Ej: 3211234567" pattern="\d{10}"
+                        minlength="10" maxlength="10" title="El teléfono debe tener exactamente 10 dígitos.">
+                </div>
+                <div id="attendees-container" style="margin-top: 15px; margin-bottom: 20px;"></div>
+                <div class="cart-summary">
+                    <p>Total a pagar: $<span id="checkout-total">0</span></p>
+                    <button type="submit" id="confirm-purchase-btn" class="cta-button">Confirmar Pedido</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -328,12 +361,29 @@
                 <input type="password" id="admin-password" placeholder="••••••"
                     style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
             </div>
+            <p id="admin-login-error"
+                style="color: #ff4d4d; font-size: 14px; text-align: center; display: none; margin-bottom: 15px; font-weight: 600;">
+            </p>
             <button id="admin-login-submit" class="cta-button" style="width:100%;">Ingresar</button>
-            <p id="admin-login-error" style="color:#b00020; margin-top:10px; display:none;">Credenciales inválidas.</p>
+        </div>
+    </div> <!-- Cerrar overlay administrador -->
+
+    <!-- Success Order Modal -->
+    <div id="success-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content success-content" style="max-width: 450px; position: relative;">
+            <div class="success-icon-circle">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3>¡Pedido Registrado!</h3>
+            <p id="success-modal-message" style="color: #eafcff; line-height: 1.6; margin-bottom: 25px;">
+                Tu pedido se ha guardado correctamente. Ahora serás redirigido a WhatsApp para finalizar el pago y
+                recibir tus tickets.
+            </p>
+            <button id="success-modal-btn" class="cta-button" style="width: 100%;">Entendido</button>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=1.1"></script>
     <script>
         // Toggle Admin/Login vs Logout buttons depending on session
         (function () {

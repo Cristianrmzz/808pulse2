@@ -39,6 +39,10 @@ const Ticket = sequelize.define('Ticket', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    customerCedula: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     customerPhone: {
         type: DataTypes.STRING,
         allowNull: false
@@ -82,12 +86,12 @@ const Ticket = sequelize.define('Ticket', {
 });
 
 // Método para verificar si el ticket es válido
-Ticket.prototype.isValid = function() {
+Ticket.prototype.isValid = function () {
     return this.status === 'active';
 };
 
 // Método para marcar ticket como usado
-Ticket.prototype.markAsUsed = async function() {
+Ticket.prototype.markAsUsed = async function () {
     this.status = 'used';
     this.usedAt = new Date();
     await this.save();

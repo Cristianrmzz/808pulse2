@@ -5,6 +5,8 @@
     --card-bg: #1a1a1a;
     --text-color: #ffffff;
     --glow-shadow: 0 0 5px var(--primary-color), 0 0 15px var(--primary-color), 0 0 25px var(--primary-color);
+    --secondary-color: #ff00ff;
+    /* Magenta Neón for accents */
 }
 
 * {
@@ -18,6 +20,26 @@ body {
     background-color: var(--dark-bg);
     color: var(--text-color);
     overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(10, 10, 10, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 255, 0.4);
+    border-radius: 4px;
+    border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 255, 255, 0.8);
 }
 
 /* NAVBAR */
@@ -41,6 +63,15 @@ body {
 
 .nav-logo img {
     height: clamp(40px, 8vw, 56px);
+    transition: filter 0.5s ease;
+}
+
+.nav-logo:hover img {
+    filter: drop-shadow(0 0 8px var(--primary-color));
+}
+
+.pulse-logo {
+    animation: pulse-neon 3s infinite ease-in-out;
 }
 
 /* Group logo + admin button on the left */
@@ -218,15 +249,44 @@ body {
 }
 
 
-/* HERO SECTION */
+/* HERO SECTION - RE DISEÑO DINÁMICO */
 .hero {
     height: 100vh;
-    background: url('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=2070&auto=format&fit=crop') center center/cover no-repeat;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
     position: relative;
+    overflow: hidden;
+    background: #000;
+}
+
+/* Imagen de fondo con efecto Ken Burns (Zoom) */
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=2070&auto=format&fit=crop') center center/cover no-repeat;
+    animation: hero-ken-burns 20s infinite alternate ease-in-out;
+    z-index: 1;
+}
+
+/* Capa de luz dinámica (Auroras) */
+.hero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 10% 10%, rgba(0, 255, 255, 0.1), transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(255, 0, 255, 0.1), transparent 40%);
+    animation: aurora-drift 12s infinite alternate ease-in-out;
+    pointer-events: none;
+    z-index: 2;
 }
 
 .hero-overlay {
@@ -235,12 +295,14 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(10, 10, 10, 0.9) 100%);
+    z-index: 3;
+    pointer-events: none;
 }
 
 .hero-content {
     position: relative;
-    z-index: 2;
+    z-index: 10;
 }
 
 .hero h1 {
@@ -248,6 +310,15 @@ body {
     margin-bottom: 1rem;
     line-height: 1.1;
     text-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+    animation: fade-in-up 1s ease-out;
+}
+
+.hero p {
+    animation: fade-in-up 1.2s ease-out;
+}
+
+.hero .cta-button {
+    animation: fade-in-up 1.4s ease-out;
 }
 
 .hero p {
@@ -597,7 +668,81 @@ body {
 }
 
 
-/* FOOTER */
+/* CHECKOUT FORM IN SIDEBAR */
+#checkout-view {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.back-btn {
+    background: transparent;
+    color: var(--primary-color);
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    transition: opacity 0.3s ease;
+}
+
+.back-btn:hover {
+    opacity: 0.8;
+}
+
+#checkout-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+#checkout-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+#checkout-form label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+#checkout-form input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    color: white;
+    font-family: inherit;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#checkout-form input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+#checkout-form input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+#checkout-total {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+#confirm-purchase-btn {
+    width: 100%;
+    margin-top: 1rem;
+}
+
 .footer {
     background: #000;
     padding: 4rem 5%;
@@ -630,6 +775,49 @@ body {
     padding-top: 1rem;
     border-top: 1px solid rgba(0, 255, 255, 0.2);
     opacity: 0.7;
+}
+
+/* SUCCESS MODAL STYLES */
+.success-content {
+    background: rgba(12, 16, 20, 0.95) !important;
+    border: 1px solid var(--primary-color) !important;
+    border-radius: 20px !important;
+    padding: 40px !important;
+    text-align: center !important;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.25) !important;
+}
+
+.success-icon-circle {
+    width: 80px;
+    height: 80px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+.success-content h3 {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+}
+
+.success-content p {
+    color: #eafcff;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    font-size: 1.05rem;
+}
+
+#success-modal-btn {
+    min-width: 150px;
 }
 
 /* ABOUT / ARTISTS (Minimal stacked columns) */
@@ -717,14 +905,135 @@ body {
     position: relative;
 }
 
-.artist-card:not(:first-child)::before {
-    content: "";
+/* ANIMACIONES DE REVELACIÓN (Scroll) */
+.reveal {
+    position: relative;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease-out;
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* KEYFRAMES */
+@keyframes pulse-neon {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 2px var(--primary-color));
+    }
+
+    50% {
+        filter: drop-shadow(0 0 12px var(--primary-color));
+    }
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scanline {
+    0% {
+        transform: translateY(-100%);
+    }
+
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+/* Nuevas animaciones Hero */
+@keyframes hero-ken-burns {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.15);
+    }
+}
+
+@keyframes aurora-drift {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0.4;
+    }
+
+    50% {
+        transform: translate(2%, 2%) rotate(1deg);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translate(-1%, -1%) rotate(-1deg);
+        opacity: 0.4;
+    }
+}
+
+@keyframes title-glitch {
+    0% {
+        text-shadow: 0 0 10px var(--primary-color);
+    }
+
+    94% {
+        text-shadow: 0 0 10px var(--primary-color);
+    }
+
+    95% {
+        text-shadow: 2px 0 red, -2px 0 blue, 0 0 15px var(--primary-color);
+    }
+
+    96% {
+        text-shadow: -3px 0 red, 3px 0 blue, 0 0 20px var(--primary-color);
+    }
+
+    97% {
+        text-shadow: 0 0 10px var(--primary-color);
+    }
+
+    100% {
+        text-shadow: 0 0 10px var(--primary-color);
+    }
+}
+
+.hero h1 {
+    animation: fade-in-up 1s ease-out, title-glitch 5s infinite;
+}
+
+/* EFECTO DE ESCANEO PARA CARDS */
+.event-card,
+.artist-card {
+    position: relative;
+}
+
+.event-card::before,
+.artist-card::before {
+    content: '';
     position: absolute;
-    top: -10px;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(to right, rgba(0, 255, 255, 0), rgba(0, 255, 255, 0.35), rgba(0, 255, 255, 0));
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(0, 255, 255, 0.05), transparent);
+    transition: all 0.6s;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.event-card:hover::before,
+.artist-card:hover::before {
+    left: 200%;
 }
 
 .artist-info h3 {

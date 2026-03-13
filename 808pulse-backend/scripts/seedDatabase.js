@@ -17,12 +17,12 @@ const eventsData = [
         capacity: 2000
     },
     {
-        name: "Techno Odyssey",
-        date: new Date("2025-11-15"),
-        location: "Bodega Industrial 55",
-        price: 120000,
-        image: "https://images.unsplash.com/photo-1557766133-5415b3c3287a?q=80&w=2070&auto=format&fit=crop",
-        description: "Sumérgete en los ritmos más profundos del techno underground",
+        name: "Lourdes - Techno Odyssey",
+        date: new Date("2025-12-20"),
+        location: "Distrito Popular - CLL 14 #11-95",
+        price: 20000,
+        image: "http://localhost:8088/Lourdes_Techno_Odyssey.png",
+        description: "LINE UP: SPOCK, ZAREK, R4MMY B2B SYNAPSYS, DANPOXX B2B LUZITHYX, TENDO B2B SANDOVAL DV. Preventa: 20K - Taquilla: 25K",
         capacity: 1500
     },
     {
@@ -49,7 +49,7 @@ const seedDatabase = async () => {
         // Insert new events
         const insertedEvents = await Event.bulkCreate(eventsData);
         console.log(`✅ Inserted ${insertedEvents.length} events:`);
-        
+
         insertedEvents.forEach(event => {
             console.log(`   - ${event.name} (${event.date.toDateString()})`);
         });
