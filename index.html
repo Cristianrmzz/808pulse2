@@ -1,14 +1,32 @@
 <!DOCTYPE html>
 <html lang="es">
-<link rel="icon" href="menta sin fondo.png" type="image/png">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>808 PULSE - Electronic Music Events</title>
-<link rel="stylesheet" href="style.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>808 PULSE - Electronic Music Events</title>
+
+    <!-- Metatags de SEO -->
+    <meta name="description"
+        content="808 PULSE es la experiencia definitiva en eventos de música electrónica en Boyacá. Encuentra los mejores DJs, experiencias inmersivas y vive el ritmo de la escena local.">
+    <meta name="keywords"
+        content="música electrónica, eventos boyacá, 808 pulse, techno, house, djs boyacá, fiestas electrónicas">
+    <meta name="author" content="808 Pulse Team">
+
+    <!-- Open Graph (WhatsApp, Instagram, FB) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="808 PULSE - Siente el Pulso de la Electrónica">
+    <meta property="og:description"
+        content="La plataforma número uno de eventos electrónicos en Boyacá. ¡No te pierdas nuestra próxima fecha!">
+    <meta property="og:image" content="Menta sin fondo.png">
+
+    <link rel="icon" href="Menta sin fondo.png" type="image/png">
+    <link rel="shortcut icon" href="Menta sin fondo.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 
 <body>
@@ -25,25 +43,109 @@
                 <li><a href="#about">Nosotros</a></li>
                 <li><a href="#contact">Contacto</a></li>
             </ul>
-            <!-- Botón Panel en header (solo con sesión) -->
-            <button id="go-admin-top-btn" class="cta-button login-button ghost nav-panel-btn"
-                style="display:none; position: fixed; top: 14px; right: 72px; width:70px; padding:18px 0; font-size:14px; z-index: 1100;">
-                Panel
-            </button>
 
+            <div class="nav-right-actions">
+                <div class="nav-cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-count">0</span>
+                </div>
 
-
-            <div class="nav-cart-icon">
-                <i class="fas fa-shopping-cart"></i>
-                <span id="cart-count">0</span>
+                <button class="hamburger-btn" onclick="toggleMobileMenu()" title="Menú">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
+
+            <!-- DRAWER UNIVERSAL (Escritorio y Móvil) -->
+            <div id="main-nav-menu" class="side-drawer">
+                <div class="drawer-header">
+                    <h3>Opciones</h3>
+                    <button class="close-drawer" onclick="closeMobileMenu()">&times;</button>
+                </div>
+
+                <!-- Sólo visibles en móvil -->
+                <ul class="drawer-links mobile-only">
+                    <li><a href="#events" onclick="closeMobileMenu()">Eventos</a></li>
+                    <li><a href="#about" onclick="closeMobileMenu()">Nosotros</a></li>
+                    <li><a href="#contact" onclick="closeMobileMenu()">Contacto</a></li>
+                </ul>
+
+                <hr class="drawer-divider">
+
+                <!-- Acciones siempre visibles en Drawer -->
+                <div class="drawer-actions">
+                    <button id="accessibility-btn" class="drawer-btn" title="Opciones de Accesibilidad">
+                        <i class="fas fa-universal-access"></i> Accesibilidad
+                    </button>
+
+                    <button id="admin-login-btn" class="drawer-btn ghost" title="Panel de administración">
+                        <i class="fas fa-user-shield"></i> Ingreso Admin
+                    </button>
+
+                    <button id="admin-logout-btn" class="drawer-btn ghost" style="display:none;" title="Cerrar sesión">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                    </button>
+
+                    <button id="go-admin-btn" class="drawer-btn ghost" style="display:none;" title="Ir al panel">
+                        <i class="fas fa-cogs"></i> Panel de Control
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de Accesibilidad -->
+            <div id="accessibility-panel" style="display:none; position: fixed; top: 62px; right: 100px; z-index: 2100;
+                       background: rgba(10,14,18,0.95); border: 1px solid rgba(0,255,255,0.35);
+                       border-radius: 16px; padding: 20px; min-width: 240px;
+                       box-shadow: 0 0 30px rgba(0,255,255,0.2); backdrop-filter: blur(12px);
+                       color: #eafcff; font-family: 'Poppins', sans-serif;">
+                <h4
+                    style="margin:0 0 16px; font-size:14px; text-transform:uppercase; letter-spacing:1px; color:#00ffff;">
+                    <i class="fas fa-universal-access" style="margin-right:8px;"></i>Accesibilidad
+                </h4>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:13px;">Tamaño de texto</span>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="changeFontSize(-1)" title="Reducir texto"
+                            style="background:rgba(0,255,255,0.1); border:1px solid rgba(0,255,255,0.4);
+                                   color:#00ffff; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:16px;">A-</button>
+                        <button onclick="changeFontSize(1)" title="Aumentar texto"
+                            style="background:rgba(0,255,255,0.1); border:1px solid rgba(0,255,255,0.4);
+                                   color:#00ffff; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:16px;">A+</button>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:13px;">Alto contraste</span>
+                    <button id="contrast-toggle" onclick="toggleContrast()"
+                        style="background:rgba(0,255,255,0.1); border:1px solid rgba(0,255,255,0.4);
+                               color:#00ffff; border-radius:8px; padding:4px 12px; cursor:pointer; font-size:12px;">OFF</button>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:13px;">Reducir animaciones</span>
+                    <button id="motion-toggle" onclick="toggleMotion()"
+                        style="background:rgba(0,255,255,0.1); border:1px solid rgba(0,255,255,0.4);
+                               color:#00ffff; border-radius:8px; padding:4px 12px; cursor:pointer; font-size:12px;">OFF</button>
+                </div>
+
+                <div
+                    style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid rgba(0,255,255,0.15);">
+                    <span style="font-size:13px;">☀️ Modo claro</span>
+                    <button id="lightmode-toggle" onclick="toggleLightMode()"
+                        style="background:rgba(0,255,255,0.1); border:1px solid rgba(0,255,255,0.4);
+                               color:#00ffff; border-radius:8px; padding:4px 12px; cursor:pointer; font-size:12px;">OFF</button>
+                </div>
+            </div>
+
+
+
         </div>
     </nav>
 
     <header class="hero">
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            <h1>Siente el Pulso. Vive la Música.</h1>
+            <h1>Feel The Pulse. Feel The Beat.</h1>
             <p>La experiencia definitiva en eventos de música electrónica en Boyacá.</p>
 
             <a href="#events" class="cta-button">Ver Próximos Eventos</a>
@@ -51,14 +153,6 @@
     </header>
 
     <main>
-        <!-- Floating Admin button bottom-left (hidden if logged in) -->
-        <button id="admin-login-btn" class="cta-button login-button ghost admin-fab"
-            title="Panel de administración">Admin</button>
-        <button id="admin-logout-btn" class="cta-button login-button ghost admin-fab" style="display:none;"
-            title="Cerrar sesión">Cerrar sesión</button>
-        <!-- Floating Go to Admin Panel button (only when logged in). Se ocultará si se muestra en el header -->
-        <button id="go-admin-btn" class="cta-button login-button ghost admin-fab"
-            style="display:none; position: fixed; bottom: 56px; left: 16px;" title="Ir al panel">Panel</button>
 
         <section id="events" class="events-section reveal">
             <h2>Próximos Eventos</h2>
@@ -329,8 +423,8 @@
                 </div>
                 <div class="form-group">
                     <label for="customer-doc">Cédula o Documento</label>
-                    <input type="text" id="customer-doc" required placeholder="Ej: 1000123456" pattern="^[0-9]+$"
-                        title="Solo números permitidos">
+                    <input type="text" id="customer-doc" required placeholder="Ej: 1000123456" minlength="5"
+                        maxlength="12" pattern="^[0-9]{5,12}$" title="Debe tener entre 5 y 12 números">
                 </div>
                 <div class="form-group">
                     <label for="customer-phone">Teléfono / WhatsApp</label>
@@ -390,20 +484,14 @@
             const loginBtn = document.getElementById('admin-login-btn');
             const logoutBtn = document.getElementById('admin-logout-btn');
             const panelBtn = document.getElementById('go-admin-btn');
-            const panelTopBtn = document.getElementById('go-admin-top-btn');
             const token = sessionStorage.getItem('adminToken');
             if (token) {
                 // Logged in: show logout, hide login; clicking logout clears token
-                loginBtn.style.display = 'none';
-                logoutBtn.style.display = 'inline-block';
-                // Mostrar botón Panel en header
-                if (panelTopBtn) {
-                    panelTopBtn.style.display = 'inline-block';
-                    panelTopBtn.onclick = () => { window.location.href = '808pulse-backend/admin-panel.html'; };
-                }
-                // Ocultar el flotante si está el de header
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (logoutBtn) logoutBtn.style.display = 'inline-block';
+                // Mostrar botón Panel integrado en nav
                 if (panelBtn) {
-                    panelBtn.style.display = panelTopBtn ? 'none' : 'inline-block';
+                    panelBtn.style.display = 'inline-block';
                     panelBtn.onclick = () => { window.location.href = '808pulse-backend/admin-panel.html'; };
                 }
                 logoutBtn.addEventListener('click', () => {
@@ -412,10 +500,35 @@
                 });
             } else {
                 // Not logged in: ensure login is visible
-                loginBtn.style.display = 'inline-block';
-                logoutBtn.style.display = 'none';
+                if (loginBtn) loginBtn.style.display = 'inline-block';
+                if (logoutBtn) logoutBtn.style.display = 'none';
                 if (panelBtn) panelBtn.style.display = 'none';
-                if (panelTopBtn) panelTopBtn.style.display = 'none';
+            }
+        })();
+
+        // Hamburger Menu Logic
+        function toggleMobileMenu() {
+            document.getElementById('main-nav-menu').classList.toggle('active');
+        }
+        function closeMobileMenu() {
+            document.getElementById('main-nav-menu').classList.remove('active');
+        }
+
+        // Botón accesibilidad: siempre activo, sin importar sesión
+        (function () {
+            const accessBtn = document.getElementById('accessibility-btn');
+            const accessPanel = document.getElementById('accessibility-panel');
+            if (accessBtn && accessPanel) {
+                accessBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = accessPanel.style.display === 'block';
+                    accessPanel.style.display = isOpen ? 'none' : 'block';
+                });
+                document.addEventListener('click', (e) => {
+                    if (!accessPanel.contains(e.target) && e.target !== accessBtn) {
+                        accessPanel.style.display = 'none';
+                    }
+                });
             }
         })();
         // Login Admin (real backend auth)
@@ -463,6 +576,50 @@
                 }
             });
         })();
+
+        // --- FUNCIONES DE ACCESIBILIDAD ---
+        let currentFontScale = 100;
+        let highContrast = false;
+        let reducedMotion = false;
+
+        function changeFontSize(direction) {
+            currentFontScale = Math.min(130, Math.max(80, currentFontScale + direction * 10));
+            document.documentElement.style.fontSize = currentFontScale + '%';
+        }
+
+        function toggleContrast() {
+            highContrast = !highContrast;
+            document.getElementById('contrast-toggle').textContent = highContrast ? 'ON' : 'OFF';
+            if (highContrast) {
+                document.body.style.filter = 'contrast(1.5) brightness(1.1)';
+            } else {
+                document.body.style.filter = '';
+            }
+        }
+
+        function toggleLightMode() {
+            const isLight = document.body.classList.toggle('light-mode');
+            document.getElementById('lightmode-toggle').textContent = isLight ? 'ON' : 'OFF';
+            localStorage.setItem('808pulse_lightmode', isLight ? '1' : '0');
+        }
+
+        // Restaurar modo claro si estaba activo
+        if (localStorage.getItem('808pulse_lightmode') === '1') {
+            document.body.classList.add('light-mode');
+            const btn = document.getElementById('lightmode-toggle');
+            if (btn) btn.textContent = 'ON';
+        }
+
+        function toggleMotion() {
+            reducedMotion = !reducedMotion;
+            document.getElementById('motion-toggle').textContent = reducedMotion ? 'ON' : 'OFF';
+            const style = document.getElementById('reduce-motion-style') || document.createElement('style');
+            style.id = 'reduce-motion-style';
+            style.textContent = reducedMotion
+                ? '*, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }'
+                : '';
+            document.head.appendChild(style);
+        }
     </script>
 </body>
 

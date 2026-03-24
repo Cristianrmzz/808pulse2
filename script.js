@@ -1,8 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- CONFIGURACIÓN DE LA API ---
-    const API_HOSTNAME = window.location.hostname || 'localhost';
-    const API_BASE_URL = `http://${API_HOSTNAME}:3002/api`;
+    // En producción, cambia esta URL por la de tu backend real (ej: 'https://api.808pulse.com')
+    const PROD_API_URL = 'https://tudominio-backend.com/api';
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    const API_BASE_URL = isLocalhost
+        ? `http://${window.location.hostname}:3002/api`
+        : PROD_API_URL;
+
+    console.log(`Conectado a la API en: ${API_BASE_URL}`);
 
     // --- DATOS DE LOS EVENTOS (Ahora se cargan desde la API) ---
     let eventsData = [];
@@ -408,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label for="att-doc-${item.id}-${i}" style="font-size: 13px;">Cédula o Documento</label>
-                                    <input type="text" id="att-doc-${item.id}-${i}" class="attendee-doc-input" data-event-id="${item.id}" data-index="${i}" required placeholder="Ej: 1000123456" pattern="^[0-9]+$" title="Solo números permitidos">
+                                    <input type="text" id="att-doc-${item.id}-${i}" class="attendee-doc-input" data-event-id="${item.id}" data-index="${i}" required placeholder="Ej: 1000123456" minlength="5" maxlength="12" pattern="^[0-9]{5,12}$" title="Debe tener entre 5 y 12 números">
                                 </div>
                             `;
                             attendeesContainer.appendChild(groupDiv);
@@ -421,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         input.addEventListener('input', (e) => e.target.value = e.target.value.replace(/[0-9]/g, ''));
                     });
                     document.querySelectorAll('.attendee-doc-input').forEach(input => {
-                        input.addEventListener('input', (e) => e.target.value = e.target.value.replace(/\\D/g, ''));
+                        input.addEventListener('input', (e) => e.target.value = e.target.value.replace(/\\D/g, '').slice(0, 12));
                     });
                 }
             }
@@ -456,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (docInput) {
         docInput.addEventListener('input', (e) => {
             // Permitir solo números
-            e.target.value = e.target.value.replace(/\D/g, '');
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 12);
 
             // Sincronizar la cédula de la primera entrada con el documento proporcionado aquí
             const firstAttendeeDocInput = document.querySelector('.attendee-doc-input');
