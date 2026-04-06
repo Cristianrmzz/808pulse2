@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>808 PULSE - Electronic Music Events</title>
+
+    <!-- Metatags de SEO -->
+    <meta name="description"
+        content="808 PULSE es la experiencia definitiva en eventos de música electrónica en Boyacá. Encuentra los mejores DJs, experiencias inmersivas y vive el ritmo de la escena local.">
+    <meta name="keywords"
+        content="música electrónica, eventos boyacá, 808 pulse, techno, house, djs boyacá, fiestas electrónicas">
+    <meta name="author" content="808 Pulse Team">
+
+    <!-- Open Graph (WhatsApp, Instagram, FB) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="808 PULSE - Siente el Pulso de la Electrónica">
+    <meta property="og:description"
+        content="La plataforma número uno de eventos electrónicos en Boyacá. ¡No te pierdas nuestra próxima fecha!">
+    <meta property="og:image" content="assets/img/logos/logo-menta.png">
+
+    <link rel="icon" href="assets/img/ui/favicon.png" type="image/png">
+    <link rel="shortcut icon" href="assets/img/ui/favicon.png" type="image/png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="#" class="nav-logo pulse-logo">
+                    <img src="assets/img/logos/logo-menta.png" alt="808 Pulse Logo">
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#events">Eventos</a></li>
+                <li><a href="#about">Nosotros</a></li>
+                <li><a href="#contact">Contacto</a></li>
+            </ul>
+
+            <div class="nav-right-actions">
+                <div class="nav-cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-count">0</span>
+                </div>
+
+                <button class="hamburger-btn" onclick="toggleMobileMenu()" title="Menú">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- DRAWER UNIVERSAL (Escritorio y Móvil) -->
+            <div id="main-nav-menu" class="side-drawer">
+                <div class="drawer-header">
+                    <h3>Opciones</h3>
+                    <button class="close-drawer" onclick="closeMobileMenu()">&times;</button>
+                </div>
+
+                <!-- Sólo visibles en móvil -->
+                <ul class="drawer-links mobile-only">
+                    <li><a href="#events" onclick="closeMobileMenu()">Eventos</a></li>
+                    <li><a href="#about" onclick="closeMobileMenu()">Nosotros</a></li>
+                    <li><a href="#contact" onclick="closeMobileMenu()">Contacto</a></li>
+                </ul>
+
+                <hr class="drawer-divider">
+
+                <!-- Acciones siempre visibles en Drawer -->
+                <div class="drawer-actions">
+                    <button id="accessibility-btn" class="drawer-btn" title="Opciones de Accesibilidad">
+                        <i class="fas fa-universal-access"></i> Accesibilidad
+                    </button>
+
+                    <button id="admin-login-btn" class="drawer-btn ghost" title="Panel de administración">
+                        <i class="fas fa-user-shield"></i> Ingreso Admin
+                    </button>
+
+                    <button id="admin-logout-btn" class="drawer-btn ghost" style="display:none;" title="Cerrar sesión">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                    </button>
+
+                    <button id="go-admin-btn" class="drawer-btn ghost" style="display:none;" title="Ir al panel">
+                        <i class="fas fa-cogs"></i> Panel de Control
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de Accesibilidad -->
+            <div id="accessibility-panel" style="display:none; position: fixed; top: 62px; right: 100px; z-index: 2100;
+                       background: rgba(10,14,18,0.95); border: 1px solid rgba(0,255,255,0.35);
+                       border-radius: 16px; padding: 20px; min-width: 240px;
+                       box-shadow: 0 0 30px rgba(0,255,255,0.2); backdrop-filter: blur(12px);
+                       color: #eafcff; font-family: 'Poppins', sans-serif;">
+                <h4
+                    style="margin:0 0 16px; font-size:14px; text-transform:uppercase; letter-spacing:1px; color:#00ffff;">
+                    <i class="fas fa-universal-access" style="margin-right:8px;"></i>Accesibilidad
+                </h4>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:13px;">Tamaño de texto</span>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="changeFontSize(-1)" title="Reducir texto"
+                            style="background:rgba(0,255,255,0.1); border:1px solid rgba(0,255,255,0.4);
+                                   color:#00ffff; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:16px;">A-</button>
+                        <button onclick="changeFontSize(1)" title="Aumentar texto"
+                            style="background:rgba(0,255,255,0.1); border:1px solid rgba(0,255,255,0.4);
+                                   color:#00ffff; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:16px;">A+</button>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:13px;">Alto contraste</span>
+                    <button id="contrast-toggle" onclick="toggleContrast()"
+                        style="background:rgba(0,255,255,0.1); border:1px solid rgba(0,255,255,0.4);
+                               color:#00ffff; border-radius:8px; padding:4px 12px; cursor:pointer; font-size:12px;">OFF</button>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:13px;">Reducir animaciones</span>
+                    <button id="motion-toggle" onclick="toggleMotion()"
+                        style="background:rgba(0,255,255,0.1); border:1px solid rgba(0,255,255,0.4);
+                               color:#00ffff; border-radius:8px; padding:4px 12px; cursor:pointer; font-size:12px;">OFF</button>
+                </div>
+
+                <div
+                    style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid rgba(0,255,255,0.15);">
+                    <span style="font-size:13px;">☀️ Modo claro</span>
+                    <button id="lightmode-toggle" onclick="toggleLightMode()"
+                        style="background:rgba(0,255,255,0.1); border:1px solid rgba(0,255,255,0.4);
+                               color:#00ffff; border-radius:8px; padding:4px 12px; cursor:pointer; font-size:12px;">OFF</button>
+                </div>
+            </div>
+
+
+
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>Feel The Pulse. Feel The Beat.</h1>
+            <p>La experiencia definitiva en eventos de música electrónica en Boyacá.</p>
+
+            <a href="#events" class="cta-button">Ver Próximos Eventos</a>
+        </div>
+    </header>
+
+    <main>
+
+        <section id="events" class="events-section reveal">
+            <h2>Próximos Eventos</h2>
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="event-search" placeholder="Busca tu próximo rave...">
+            </div>
+            <div id="event-cards-container" class="event-cards-container">
+            </div>
+        </section>
+
+        <!-- NOSOTROS / ARTISTAS -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <section id="about" class="about-section">
+
+
+            <h2 class="reveal" style="margin-top: 50px; text-align: center; font-size: 40px;">
+                Nuestros Artistas
+            </h2>
+
+
+            <div class="artists-grid">
+                <article class="artist-card reveal">
+                    <div class="artist-photo">
+                        <img src="assets/img/artists/r4mmy.jpeg" alt="Artista 1">
+                    </div>
+                    <div class="artist-info">
+                        <h3>R4MMY</h3>
+                        <p class="artist-role">Hard Groove / Hypnotic / Hard Trance / Hard Hause</p>
+                        <p class="artist-bio"> DJ con un sonido hypnótico y líneas contundentes que rompen la pista. Sus
+                            sets exploran texturas acidas con una estética futurista.</p>
+                        <div class="artist-cta">
+                            <a class="cta-mini" href="https://soundcloud.com/cristian-cam-lo/tracks" target="_blank"
+                                rel="noopener">Escuchar set</a>
+                            <a class="cta-mini ghost icon" href="https://www.instagram.com/r4mmy.99/" target="_blank"
+                                rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a class="cta-mini"
+                                href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20R4mmy"
+                                target="_blank" rel="noopener">Booking</a>
+                        </div>
+                    </div>
+                </article>
+                <article class="artist-card reveal">
+                    <div class="artist-photo">
+                        <img src="assets/img/artists/sandoval.jpeg" alt="Artista 3">
+                    </div>
+                    <div class="artist-info">
+                        <h3>SANDOVAL DV</h3>
+                        <p class="artist-role">Hard rave / Hard bounce / Hard Techno </p>
+                        <p class="artist-bio">Melodías envolventes, fuertes y percusiones cuidadas. Sandoval DV combina
+                            sensibilidad cinematográfica con energía pura para viajes sonoros inolvidables.</p>
+                        <div class="artist-cta">
+                            <a class="cta-mini" href="https://soundcloud.com/david-sandoval-621032413" target="_blank"
+                                rel="noopener">Escuchar set</a>
+                            <a class="cta-mini ghost icon" href="https://www.instagram.com/sandovaldv_dj/"
+                                target="_blank" rel="noopener" aria-label="Instagram"><i
+                                    class="fab fa-instagram"></i></a>
+                            <a class="cta-mini"
+                                href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20Sandoval%20DV"
+                                target="_blank" rel="noopener">Booking</a>
+                        </div>
+                    </div>
+                </article>
+                <article class="artist-card reveal">
+                    <div class="artist-photo">
+                        <img src="assets/img/artists/sypnasys.jpeg" alt="Artista 3">
+                    </div>
+                    <div class="artist-info">
+                        <h3>SYPNASYS</h3>
+                        <p class="artist-role">Neo rave / Industrial / Hard techno</p>
+                        <p class="artist-bio">Groove contundente, bajos profundos y ritmo imparable. Su selección mezcla
+                            clásicos con cuts underground que mantienen la pista en alto.</p>
+                        <div class="artist-cta">
+                            <a class="cta-mini" href="https://soundcloud.com/synapsys-l999l" target="_blank"
+                                rel="noopener">Escuchar set</a>
+                            <a class="cta-mini ghost icon" href="https://www.instagram.com/synapsys.99/" target="_blank"
+                                rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a class="cta-mini"
+                                href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20Synapsys"
+                                target="_blank" rel="noopener">Booking</a>
+                        </div>
+                    </div>
+                </article>
+                <article class="artist-card reveal">
+                    <div class="artist-photo">
+                        <img src="assets/img/artists/spock.jpeg" alt="Artista 3">
+                    </div>
+                    <div class="artist-info">
+                        <h3>SPOCK</h3>
+                        <p class="artist-role">Groove / Hard Groove / Acid Techno</p>
+                        <p class="artist-bio">DJ con una iniciativa sonora Underground donde el groove sostiene la pista
+                            y la atmósfera. Su propuesta se basa en la progresión, linea musical y la tensión bien
+                            medida, construyendo sesiones sólidas y coherentes.</p>
+                        <div class="artist-cta">
+                            <a class="cta-mini" href="https://soundcloud.com/baldinho-sb" target="_blank"
+                                rel="noopener">Escuchar set</a>
+                            <a class="cta-mini ghost icon" href="https://www.instagram.com/baldinh0000/" target="_blank"
+                                rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a class="cta-mini"
+                                href="https://mail.google.com/mail/?view=cm&fs=1&to=808.pulsee@gmail.com&su=Booking&body=Buen%20d%C3%ADa.%0AQuiero%20tener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20booking%20del%20artista%20Spock"
+                                target="_blank" rel="noopener">Booking</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+        </section>
+    </main>
+
+    <section id="contact" class="contact-section reveal">
+        <div class="social-card">
+            <h2>Conéctate con Nosotros</h2>
+            <p>Síguenos en nuestras redes para estar al tanto de los próximos eventos y novedades.</p>
+            <div class="social-links">
+                <a href="https://www.instagram.com/808_pulse/" class="social-link" target="_blank" rel="noopener">
+                    <div class="social-icon">
+                        <i class="fab fa-instagram"></i>
+                    </div>
+                    <span class="social-name">Instagram</span>
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=61572292401431" class="social-link" target="_blank"
+                    rel="noopener">
+                    <div class="social-icon">
+                        <i class="fab fa-facebook-f"></i>
+                    </div>
+                    <span class="social-name">Facebook</span>
+                </a>
+                <a href="https://www.tiktok.com/@808pulse5?_r=1&_t=ZS-93hdwxXJFFV" class="social-link" target="_blank"
+                    rel="noopener">
+                    <div class="social-icon">
+                        <i class="fab fa-tiktok"></i>
+                    </div>
+                    <span class="social-name">TikTok</span>
+                </a>
+                <a href="https://wa.me/573212490163" class="social-link" target="_blank" rel="noopener">
+                    <div class="social-icon">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <span class="social-name">WhatsApp</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <img src="assets/img/logos/logo-menta.png" alt="808 Pulse Logo Footer" class="footer-logo">
+            <p>Conectando almas a través de la vibración.</p>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 808 PULSE. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <div id="ticket-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button class="close-modal-btn">&times;</button>
+            <h3 id="modal-event-title">Comprar Entradas</h3>
+            <p>¿Cuántas entradas deseas comprar?</p>
+            <div class="quantity-selector">
+                <button id="decrease-quantity">-</button>
+                <input type="number" id="ticket-quantity" value="1" min="1">
+                <button id="increase-quantity">+</button>
+            </div>
+            <button id="confirm-add-to-cart-btn" class="cta-button">Agregar al Carrito</button>
+        </div>
+    </div>
+
+    <!-- Edit Event Modal (Admin only) -->
+    <div id="edit-event-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 600px; text-align:left;">
+            <button class="close-edit-event" aria-label="Cerrar"
+                style="position:absolute; right:15px; top:10px; background:none; border:none; color:#fff; font-size:2rem; cursor:pointer;">&times;</button>
+            <h3>Editar Evento</h3>
+            <form id="edit-event-form">
+                <input type="hidden" id="edit-event-id">
+                <div class="form-group">
+                    <label for="edit-name">Nombre</label>
+                    <input type="text" id="edit-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-date">Fecha y hora</label>
+                    <input type="datetime-local" id="edit-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-location">Ubicación</label>
+                    <input type="text" id="edit-location" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-price">Precio (COP)</label>
+                    <input type="number" id="edit-price" min="0" step="1000" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-image">URL del Flyer (imagen)</label>
+                    <input type="url" id="edit-image" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-description">Descripción</label>
+                    <input type="text" id="edit-description">
+                </div>
+                <div class="form-group">
+                    <label for="edit-capacity">Capacidad</label>
+                    <input type="number" id="edit-capacity" min="0" step="1">
+                </div>
+                <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="edit-isActive">
+                    <label for="edit-isActive" style="margin:0;">Activo</label>
+                </div>
+                <button type="submit" class="cta-button">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="cart-sidebar" class="cart-sidebar">
+        <button class="close-cart-btn">&times;</button>
+        <div id="cart-items-view">
+            <h2>Tu Carrito</h2>
+            <div id="cart-items-container">
+            </div>
+            <div class="cart-summary">
+                <p>Total: $<span id="cart-total">0</span></p>
+                <button id="go-to-checkout-btn" class="cta-button">Continuar al Pago</button>
+            </div>
+        </div>
+
+        <div id="checkout-view" style="display: none;">
+            <button id="back-to-cart-btn" class="back-btn"><i class="fas fa-arrow-left"></i> Volver al Carrito</button>
+            <h2>Finalizar Compra</h2>
+            <form id="checkout-form">
+                <div class="form-group">
+                    <label for="customer-name">Nombre Completo</label>
+                    <input type="text" id="customer-name" required placeholder="Ej: Juan Pérez"
+                        pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" title="El nombre solo debe contener letras.">
+                </div>
+                <div class="form-group">
+                    <label for="customer-email">Correo Electrónico</label>
+                    <input type="email" id="customer-email" required placeholder="juan@ejemplo.com">
+                </div>
+                <div class="form-group">
+                    <label for="customer-doc">Cédula o Documento</label>
+                    <input type="text" id="customer-doc" required placeholder="Ej: 1000123456" minlength="5"
+                        maxlength="12" pattern="^[0-9]{5,12}$" title="Debe tener entre 5 y 12 números">
+                </div>
+                <div class="form-group">
+                    <label for="customer-phone">Teléfono / WhatsApp</label>
+                    <input type="tel" id="customer-phone" required placeholder="Ej: 3211234567" pattern="\d{10}"
+                        minlength="10" maxlength="10" title="El teléfono debe tener exactamente 10 dígitos.">
+                </div>
+                <div id="attendees-container" style="margin-top: 15px; margin-bottom: 20px;"></div>
+                <div class="cart-summary">
+                    <p>Total a pagar: $<span id="checkout-total">0</span></p>
+                    <button type="submit" id="confirm-purchase-btn" class="cta-button">Confirmar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 420px;">
+            <button class="close-admin-login" aria-label="Cerrar">&times;</button>
+            <h3>Acceso de Administrador</h3>
+            <p style="margin: 10px 0 15px; color:#555;">Ingresa la clave de superusuario para abrir el panel de
+                administración.</p>
+            <div class="form-group">
+                <label for="admin-username">Usuario:</label>
+                <input type="text" id="admin-username" placeholder="admin"
+                    style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; margin-bottom:10px;">
+                <label for="admin-password">Clave:</label>
+                <input type="password" id="admin-password" placeholder="••••••"
+                    style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+            </div>
+            <p id="admin-login-error"
+                style="color: #ff4d4d; font-size: 14px; text-align: center; display: none; margin-bottom: 15px; font-weight: 600;">
+            </p>
+            <button id="admin-login-submit" class="cta-button" style="width:100%;">Ingresar</button>
+        </div>
+    </div> <!-- Cerrar overlay administrador -->
+
+    <!-- Success Order Modal -->
+    <div id="success-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content success-content" style="max-width: 450px; position: relative;">
+            <div class="success-icon-circle">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3>¡Pedido Registrado!</h3>
+            <p id="success-modal-message" style="color: #eafcff; line-height: 1.6; margin-bottom: 25px;">
+                Tu pedido se ha guardado correctamente. Ahora serás redirigido a WhatsApp para finalizar el pago y
+                recibir tus tickets.
+            </p>
+            <button id="success-modal-btn" class="cta-button" style="width: 100%;">Entendido</button>
+        </div>
+    </div>
+
+    <script src="js/script.js?v=1.2"></script>
+    <script>
+        // Toggle Admin/Login vs Logout buttons depending on session
+        (function () {
+            const loginBtn = document.getElementById('admin-login-btn');
+            const logoutBtn = document.getElementById('admin-logout-btn');
+            const panelBtn = document.getElementById('go-admin-btn');
+            const token = sessionStorage.getItem('adminToken');
+            if (token) {
+                // Logged in: show logout, hide login; clicking logout clears token
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (logoutBtn) logoutBtn.style.display = 'inline-block';
+                // Mostrar botón Panel integrado en nav
+                if (panelBtn) {
+                    panelBtn.style.display = 'inline-block';
+                    panelBtn.onclick = () => { window.location.href = './admin-panel.html'; };
+                }
+                logoutBtn.addEventListener('click', () => {
+                    sessionStorage.removeItem('adminToken');
+                    location.reload();
+                });
+            } else {
+                // Not logged in: ensure login is visible
+                if (loginBtn) loginBtn.style.display = 'inline-block';
+                if (logoutBtn) logoutBtn.style.display = 'none';
+                if (panelBtn) panelBtn.style.display = 'none';
+            }
+        })();
+
+        // Hamburger Menu Logic
+        function toggleMobileMenu() {
+            document.getElementById('main-nav-menu').classList.toggle('active');
+        }
+        function closeMobileMenu() {
+            document.getElementById('main-nav-menu').classList.remove('active');
+        }
+
+        // Botón accesibilidad: siempre activo, sin importar sesión
+        (function () {
+            const accessBtn = document.getElementById('accessibility-btn');
+            const accessPanel = document.getElementById('accessibility-panel');
+            if (accessBtn && accessPanel) {
+                accessBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = accessPanel.style.display === 'block';
+                    accessPanel.style.display = isOpen ? 'none' : 'block';
+                });
+                document.addEventListener('click', (e) => {
+                    if (!accessPanel.contains(e.target) && e.target !== accessBtn) {
+                        accessPanel.style.display = 'none';
+                    }
+                });
+            }
+        })();
+        // Login Admin (real backend auth)
+        (function () {
+            const OPEN_BTN = document.getElementById('admin-login-btn');
+            const MODAL = document.getElementById('admin-login-modal');
+            const CLOSE_BTN = document.querySelector('.close-admin-login');
+            const SUBMIT_BTN = document.getElementById('admin-login-submit');
+            const USER_INPUT = document.getElementById('admin-username');
+            const PASS_INPUT = document.getElementById('admin-password');
+            const ERROR_MSG = document.getElementById('admin-login-error');
+
+            function openModal() { MODAL.style.display = 'flex'; PASS_INPUT.focus(); }
+            function closeModal() { MODAL.style.display = 'none'; ERROR_MSG.style.display = 'none'; PASS_INPUT.value = ''; }
+
+            OPEN_BTN.addEventListener('click', openModal);
+            CLOSE_BTN.addEventListener('click', closeModal);
+            window.addEventListener('click', (e) => { if (e.target === MODAL) closeModal(); });
+            PASS_INPUT.addEventListener('keypress', (e) => { if (e.key === 'Enter') SUBMIT_BTN.click(); });
+            USER_INPUT.addEventListener('keypress', (e) => { if (e.key === 'Enter') SUBMIT_BTN.click(); });
+
+            SUBMIT_BTN.addEventListener('click', async () => {
+                const username = USER_INPUT.value.trim() || 'admin';
+                const password = PASS_INPUT.value.trim();
+                ERROR_MSG.style.display = 'none';
+                if (!password) { ERROR_MSG.textContent = 'Ingresa la clave.'; ERROR_MSG.style.display = 'block'; return; }
+                try {
+                    const resp = await fetch('http://localhost:3002/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok) {
+                        ERROR_MSG.textContent = data.message || 'Credenciales inválidas';
+                        ERROR_MSG.style.display = 'block';
+                        return;
+                    }
+                    sessionStorage.setItem('adminToken', data.token);
+                    // Redirigir al panel
+                    window.location.href = './admin-panel.html';
+                } catch (err) {
+                    ERROR_MSG.textContent = 'Error de red al iniciar sesión';
+                    ERROR_MSG.style.display = 'block';
+                }
+            });
+        })();
+
+        // --- FUNCIONES DE ACCESIBILIDAD ---
+        let currentFontScale = 100;
+        let highContrast = false;
+        let reducedMotion = false;
+
+        function changeFontSize(direction) {
+            currentFontScale = Math.min(130, Math.max(80, currentFontScale + direction * 10));
+            document.documentElement.style.fontSize = currentFontScale + '%';
+        }
+
+        function toggleContrast() {
+            highContrast = !highContrast;
+            document.getElementById('contrast-toggle').textContent = highContrast ? 'ON' : 'OFF';
+            if (highContrast) {
+                document.body.style.filter = 'contrast(1.5) brightness(1.1)';
+            } else {
+                document.body.style.filter = '';
+            }
+        }
+
+        function toggleLightMode() {
+            const isLight = document.body.classList.toggle('light-mode');
+            document.getElementById('lightmode-toggle').textContent = isLight ? 'ON' : 'OFF';
+            localStorage.setItem('808pulse_lightmode', isLight ? '1' : '0');
+        }
+
+        // Restaurar modo claro si estaba activo
+        if (localStorage.getItem('808pulse_lightmode') === '1') {
+            document.body.classList.add('light-mode');
+            const btn = document.getElementById('lightmode-toggle');
+            if (btn) btn.textContent = 'ON';
+        }
+
+        function toggleMotion() {
+            reducedMotion = !reducedMotion;
+            document.getElementById('motion-toggle').textContent = reducedMotion ? 'ON' : 'OFF';
+            const style = document.getElementById('reduce-motion-style') || document.createElement('style');
+            style.id = 'reduce-motion-style';
+            style.textContent = reducedMotion
+                ? '*, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }'
+                : '';
+            document.head.appendChild(style);
+        }
+    </script>
+</body>
+
+</html>
