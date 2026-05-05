@@ -1375,6 +1375,13 @@ body.light-mode .drawer-btn.ghost {
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
+@media (max-width: 768px) {
+    .artist-card {
+        flex-direction: column;
+        max-width: 450px;
+    }
+}
+
 .artist-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(0, 255, 255, 0.12);
@@ -1385,6 +1392,17 @@ body.light-mode .drawer-btn.ghost {
     flex: 0 0 300px;
     height: 300px;
     min-width: 300px;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .artist-photo {
+        flex: 1 1 auto;
+        width: 100%;
+        height: auto;
+        min-width: 100%;
+        aspect-ratio: 1 / 1;
+    }
 }
 
 .artist-photo img {

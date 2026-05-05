@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> Panel de Administración</title>
-    <link rel="icon" href="../menta sin fondo.png" type="image/png">
+    <link rel="icon" href="assets/img/logos/logo-menta.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         :root {
@@ -52,10 +52,19 @@
 
         .admin-logo {
             display: block;
-            margin: 0 auto 10px auto;
-            max-height: 70px;
+            margin: 0 auto 15px auto;
+            max-height: 140px;
+            /* Tamaño aumentado */
             width: auto;
-            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25));
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+            image-rendering: -webkit-optimize-contrast;
+            /* Mejora la nitidez en algunos navegadores */
+            transition: transform 0.3s ease;
+        }
+
+        .admin-logo:hover {
+            transform: scale(1.05);
+            /* Efecto interactivo sutil */
         }
 
         .header h1 {
@@ -741,7 +750,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <img class="admin-logo" src="../logoblanco__1_-removebg-preview (1).png" alt="808 PULSE Logo">
+            <img class="admin-logo" src="assets/img/logos/logo-menta.png" alt="808 PULSE Logo">
             <h1></h1>
             <h1>Panel de Administración</h1>
         </div>
@@ -1165,6 +1174,14 @@
                         <td style="padding:10px 12px; border-bottom:1px solid #eee; text-align:right;">$${Number(ev.revenue).toLocaleString('es-CO', { minimumFractionDigits: 0 })}</td>
                         <td style="padding:10px 12px; border-bottom:1px solid #eee; text-align:right;">${ev.ticketsGenerated}</td>
                         <td style="padding:10px 12px; border-bottom:1px solid #eee; text-align:right;">${ev.ticketsUsed}</td>
+                        <td style="padding:10px 12px; border-bottom:1px solid #eee; text-align:center; display: flex; gap: 8px; justify-content: center;">
+                            <button class="btn btn-warning" onclick="deleteLastOrder(${ev.eventId}, '${ev.eventName}')" title="Borrar última venta">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="clearEventAccounting(${ev.eventId}, '${ev.eventName}')" title="Vaciar todo el evento">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
                     </tr>
                 `).join('');
 
@@ -1179,10 +1196,11 @@
                                     <th style="text-align:right; padding:12px;">Recaudación</th>
                                     <th style="text-align:right; padding:12px;">Tickets generados</th>
                                     <th style="text-align:right; padding:12px;">Tickets usados</th>
+                                    <th style="text-align:center; padding:12px;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${rows || '<tr><td colspan="5" style="padding:16px; text-align:center; color:#64748b;">Sin datos</td></tr>'}
+                                ${rows || '<tr><td colspan="6" style="padding:16px; text-align:center; color:#64748b;">Sin datos</td></tr>'}
                             </tbody>
                         </table>
                     </div>
@@ -1192,7 +1210,61 @@
             } catch (error) {
                 console.error('Error loading accounting:', error);
                 const accountingContainer = document.getElementById('accounting-container');
-                accountingContainer.innerHTML = `<div style=\"background:#f8d7da; color:#721c24; padding: 20px; border-radius: 10px;\">Error cargando contabilidad</div>`;
+                accountingContainer.innerHTML = `<div style="background:#f8d7da; color:#721c24; padding: 20px; border-radius: 10px;">Error cargando contabilidad</div>`;
+            }
+        }
+
+        async function clearEventAccounting(eventId, eventName) {
+            const ok = await confirmDialog(
+                `¿Deseas reiniciar TODA la contabilidad del evento "${eventName}"? Se borrarán todas las órdenes y tickets asociados.`,
+                'BORRADO TOTAL',
+                'exclamation-triangle'
+            );
+            if (!ok) return;
+
+            try {
+                const response = await fetchWithAuth(`${API_BASE}/admin/accounting/event/${eventId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showToast('Éxito', `Contabilidad de ${eventName} reiniciada`, 'success');
+                    loadAccounting();
+                    loadDashboard();
+                    loadOrders();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.message);
+                }
+            } catch (error) {
+                console.error('Error clearing accounting:', error);
+            }
+        }
+
+        async function deleteLastOrder(eventId, eventName) {
+            const ok = await confirmDialog(
+                `¿Confirmas que deseas borrar la ÚLTIMA venta del evento "${eventName}"?`,
+                'Deshacer Venta',
+                'undo'
+            );
+            if (!ok) return;
+
+            try {
+                const response = await fetchWithAuth(`${API_BASE}/admin/accounting/event/${eventId}/last`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showToast('Éxito', 'Última venta eliminada correctamente', 'success');
+                    loadAccounting();
+                    loadDashboard();
+                    loadOrders();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.message);
+                }
+            } catch (error) {
+                console.error('Error deleting last order:', error);
             }
         }
 

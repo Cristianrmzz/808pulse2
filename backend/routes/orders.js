@@ -51,7 +51,8 @@ router.post('/', async (req, res) => {
             total: total,
             customerName: customerInfo?.name || null,
             customerPhone: customerInfo?.phone || null,
-            customerEmail: customerInfo?.email || null
+            customerEmail: customerInfo?.email || null,
+            customerCedula: customerInfo?.doc || customerInfo?.cedula || null
         });
 
         // Create order items

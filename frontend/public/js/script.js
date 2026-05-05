@@ -39,30 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const fallbackEvents = [
         {
             id: 1,
-            name: "Neon Dreams Fest",
-            date: "25 Oct 2025",
-            location: "Centro de Eventos Metropolitano",
-            price: 150000,
-            image: "https://images.unsplash.com/photo-1582711012103-60a6539455f8?q=80&w=1974&auto=format&fit=crop",
-            description: "Una noche inmersiva con los mejores exponentes del techno melódico."
-        },
-        {
-            id: 2,
-            name: "Techno Odyssey",
-            date: "15 Nov 2025",
-            location: "Bodega Industrial 55",
-            price: 120000,
-            image: "https://images.unsplash.com/photo-1557766133-5415b3c3287a?q=80&w=2070&auto=format&fit=crop",
-            description: "Energía pura y ritmos industriales en el corazón de la ciudad."
-        },
-        {
-            id: 3,
-            name: "Pulse Warehouse Rave",
-            date: "06 Dic 2025",
-            location: "Lugar Secreto (se revela 24h antes)",
-            price: 180000,
-            image: "https://images.unsplash.com/photo-1543306979-041433994a32?q=80&w=2070&auto=format&fit=crop",
-            description: "Nuestra reunión anual más exclusiva. El cierre perfecto para el 2025."
+            name: "Lourdes",
+            date: "15 Jun 2024",
+            location: "Lourdes Music Hall",
+            price: 80000,
+            image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070&auto=format&fit=crop",
+            description: "Una experiencia musical única en el corazón de la ciudad."
         }
     ];
 
@@ -320,9 +302,15 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const adminToken = sessionStorage.getItem('adminToken');
             const id = document.getElementById('edit-event-id').value;
+            const dateValue = document.getElementById('edit-date').value;
+            if (!dateValue) {
+                alert('Por favor selecciona una fecha válida');
+                return;
+            }
+
             const payload = {
                 name: document.getElementById('edit-name').value,
-                date: new Date(document.getElementById('edit-date').value).toISOString(),
+                date: new Date(dateValue).toISOString(),
                 location: document.getElementById('edit-location').value,
                 price: Number(document.getElementById('edit-price').value),
                 image: document.getElementById('edit-image').value,
@@ -337,10 +325,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(payload)
                 });
                 if (resp.ok) {
+                    alert('✅ Evento actualizado con éxito');
                     closeEditEventModal();
                     fetchEvents();
+                } else {
+                    const errData = await resp.json();
+                    alert('❌ Error al guardar: ' + (errData.message || 'Error desconocido'));
                 }
-            } catch (error) { console.error(error); }
+            } catch (error) {
+                console.error(error);
+                alert('❌ Error de conexión con el servidor');
+            }
         });
     }
 
@@ -579,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 closeCart();
 
                 // Abrir WhatsApp solo cuando el usuario haga clic en "Entendido"
-                const whatsappUrl = `https://wa.me/573212490163?text=${encodedMessage}`;
+                const whatsappUrl = `https://wa.me/573150167613?text=${encodedMessage}`;
 
                 const successModal = document.getElementById('success-modal');
                 const successBtn = document.getElementById('success-modal-btn');

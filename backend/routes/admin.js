@@ -48,7 +48,7 @@ router.get('/orders', async (req, res) => {
 router.post('/confirm-payment/:orderId', async (req, res) => {
     try {
         const { orderId } = req.params;
-        const { customerName, customerPhone, customerEmail } = req.body || {};
+        const { customerName, customerPhone, customerEmail, customerCedula } = req.body || {};
 
         const order = await Order.findByPk(orderId);
         if (!order) {
@@ -59,17 +59,19 @@ router.post('/confirm-payment/:orderId', async (req, res) => {
         const finalName = customerName || order.customerName || 'Cliente';
         const finalPhone = customerPhone || order.customerPhone || 'N/A';
         const finalEmail = customerEmail || order.customerEmail || null;
+        const finalCedula = customerCedula || order.customerCedula || null;
 
         // Actualizar orden con información del cliente y confirmar pago
         await order.update({
             status: 'confirmed',
             customerName: finalName,
             customerPhone: finalPhone,
-            customerEmail: finalEmail
+            customerEmail: finalEmail,
+            customerCedula: finalCedula
         });
 
         // Generar tickets con QR únicos
-        const customerInfo = { name: finalName, phone: finalPhone };
+        const customerInfo = { name: finalName, phone: finalPhone, cedula: finalCedula };
         const tickets = await TicketService.generateTicketsForOrder(orderId, customerInfo);
 
         // Enviar tickets por correo si hay email
@@ -295,43 +297,127 @@ router.get('/accounting', async (req, res) => {
     }
 });
 
+// DELETE /api/admin/accounting/event/:eventId - Vaciar contabilidad de un evento (BORRADO TOTAL)
+router.delete('/accounting/event/:eventId', async (req, res) => {
+    const { eventId } = req.params;
+    const t = await sequelize.transaction();
+    try {
+        // 1. Obtener IDs de las órdenes que contienen este evento
+        const orderItems = await OrderItem.findAll({ where: { eventId } });
+        const orderIds = [...new Set(orderItems.map(oi => oi.orderId))];
+
+        // 2. Eliminar tickets del evento
+        await Ticket.destroy({ where: { eventId }, transaction: t });
+
+        // 3. Eliminar items del evento
+        await OrderItem.destroy({ where: { eventId }, transaction: t });
+
+        // 4. Limpiar órdenes vacías (si existían solo para ese evento)
+        for (const oId of orderIds) {
+            const remainingItems = await OrderItem.count({ where: { orderId: oId }, transaction: t });
+            if (remainingItems === 0) {
+                await Order.destroy({ where: { id: oId }, transaction: t });
+            }
+        }
+
+        // 5. Reiniciar contador en el evento
+        await Event.update({ ticketsSold: 0 }, { where: { id: eventId }, transaction: t });
+
+        await t.commit();
+        res.json({ message: 'Contabilidad del evento reiniciada correctamente' });
+    } catch (err) {
+        await t.rollback();
+        console.error('Error vaciando contabilidad:', err);
+        res.status(500).json({ message: 'Error al vaciar contabilidad' });
+    }
+});
+
+// DELETE /api/admin/accounting/event/:eventId/last - Borrar únicamente la ÚLTIMA venta realizada de este evento
+router.delete('/accounting/event/:eventId/last', async (req, res) => {
+    const { eventId } = req.params;
+    const t = await sequelize.transaction();
+    try {
+        // Encontrar el último ítem vendido de este evento
+        const lastItem = await OrderItem.findOne({
+            where: { eventId },
+            order: [['id', 'DESC']],
+            transaction: t
+        });
+
+        if (!lastItem) {
+            await t.rollback();
+            return res.status(404).json({ message: 'No se encontraron ventas para este evento' });
+        }
+
+        const qty = lastItem.quantity;
+        const orderId = lastItem.orderId;
+
+        // 1. Eliminar tickets de este item
+        await Ticket.destroy({
+            where: {
+                orderId: lastItem.orderId,
+                eventId: eventId
+            },
+            transaction: t
+        });
+
+        // 2. Eliminar el item de la orden
+        await lastItem.destroy({ transaction: t });
+
+        // 3. Si la orden se quedó sin items, borrar la orden
+        const remainingItems = await OrderItem.count({ where: { orderId }, transaction: t });
+        if (remainingItems === 0) {
+            await Order.destroy({ where: { id: orderId }, transaction: t });
+        }
+
+        // 4. Devolver stock al evento (reducir ticketsSold)
+        const event = await Event.findByPk(eventId, { transaction: t });
+        if (event) {
+            await event.decrement('ticketsSold', { by: qty, transaction: t });
+        }
+
+        await t.commit();
+        res.json({ message: 'Última venta eliminada y stock devuelto' });
+    } catch (err) {
+        await t.rollback();
+        console.error('Error borrando última venta:', err);
+        res.status(500).json({ message: 'Error al borrar última venta' });
+    }
+});
+
 module.exports = router;
 
 // --- BULK CLEANUP ENDPOINTS ---
 // Nota: por seguridad, protegidas por authRequired/adminOnly vía router.use
 
-// DELETE /api/admin/orders - Limpieza de órdenes por filtros
-// body: { status?: 'pending'|'confirmed', beforeDate?: ISOString, orderId?: string }
+// DELETE /api/admin/orders - Limpieza PROFUNDA de órdenes (Borrón y cuenta nueva)
 router.delete('/orders', async (req, res) => {
-    const { status, beforeDate, orderId } = req.body || {};
-    const where = {};
-    if (orderId) where.orderId = orderId;
-    if (status) where.status = status;
-    if (beforeDate) {
-        const d = new Date(beforeDate);
-        if (!isNaN(d)) where.createdAt = { [Op.lt]: d };
-    }
     const t = await sequelize.transaction();
     try {
-        // Encontrar órdenes objetivo
-        const targets = await Order.findAll({ where, transaction: t });
-        const ids = targets.map(o => o.id);
-        if (!ids.length) {
-            await t.rollback();
-            return res.json({ deleted: 0 });
-        }
-        // Eliminar tickets vinculados a esas órdenes
-        await Ticket.destroy({ where: { orderId: { [Op.in]: ids } }, transaction: t });
-        // Eliminar items
-        await OrderItem.destroy({ where: { orderId: { [Op.in]: ids } }, transaction: t });
-        // Eliminar órdenes
-        const deleted = await Order.destroy({ where: { id: { [Op.in]: ids } }, transaction: t });
+        // 1. Eliminar todos los tickets
+        await Ticket.destroy({ where: {}, transaction: t });
+
+        // 2. Eliminar todos los items de órdenes
+        await OrderItem.destroy({ where: {}, transaction: t });
+
+        // 3. Eliminar todas las órdenes
+        const deleted = await Order.destroy({ where: {}, transaction: t });
+
+        // 4. Reiniciar el contador de tickets vendidos en TODOS los eventos
+        await Event.update({ ticketsSold: 0 }, { where: {}, transaction: t });
+
+        // 5. Reiniciar los contadores de ID (AutoIncrement) para empezar desde 1
+        // Nota: Esto es específico de MySQL
+        await sequelize.query("ALTER TABLE tickets AUTO_INCREMENT = 1;", { transaction: t });
+        await sequelize.query("ALTER TABLE order_items AUTO_INCREMENT = 1;", { transaction: t });
+        await sequelize.query("ALTER TABLE orders AUTO_INCREMENT = 1;", { transaction: t });
+
         await t.commit();
-        res.json({ deleted });
+        res.json({ message: 'Sistema reiniciado: órdenes, tickets y contadores limpios', deleted });
     } catch (err) {
         await t.rollback();
-        console.error('[ADMIN] cleanup orders failed:', err);
-        res.status(500).json({ message: 'Error limpiando órdenes' });
+        console.error('[ADMIN] Deep cleanup failed:', err);
+        res.status(500).json({ message: 'Error en la limpieza profunda' });
     }
 });
 

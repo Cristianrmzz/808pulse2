@@ -35,7 +35,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', authRequired, adminOnly, async (req, res) => {
     try {
         const { name, date, location, price, image, description, capacity } = req.body;
-        
+
         const event = await Event.create({
             name,
             date,
@@ -56,15 +56,14 @@ router.post('/', authRequired, adminOnly, async (req, res) => {
 // PUT /api/events/:id - Update event (admin only)
 router.put('/:id', authRequired, adminOnly, async (req, res) => {
     try {
-        const [updatedRowsCount] = await Event.update(req.body, {
+        await Event.update(req.body, {
             where: { id: req.params.id }
         });
-        
-        if (updatedRowsCount === 0) {
+
+        const updatedEvent = await Event.findByPk(req.params.id);
+        if (!updatedEvent) {
             return res.status(404).json({ message: 'Event not found' });
         }
-        
-        const updatedEvent = await Event.findByPk(req.params.id);
         res.json(updatedEvent);
     } catch (error) {
         console.error('Error updating event:', error);
@@ -79,11 +78,11 @@ router.delete('/:id', authRequired, adminOnly, async (req, res) => {
             { isActive: false },
             { where: { id: req.params.id } }
         );
-        
+
         if (updatedRowsCount === 0) {
             return res.status(404).json({ message: 'Event not found' });
         }
-        
+
         res.json({ message: 'Event deactivated successfully' });
     } catch (error) {
         console.error('Error deactivating event:', error);

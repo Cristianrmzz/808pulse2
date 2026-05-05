@@ -92,7 +92,7 @@ async function generateTicketPDF(ticket, brandLogoPath) {
         doc.fillColor(BRAND_COLOR)
           .fontSize(22)
           .font('Helvetica-Bold')
-          .text('808', 0, currentY + 10, { align: 'center', width: width, characterSpacing: 3 });
+          .text('PULSE', 0, currentY + 10, { align: 'center', width: width, characterSpacing: 3 });
       }
     } catch (e) {
       console.error('Error drawing logo:', e);
@@ -189,7 +189,7 @@ async function generateTicketPDF(ticket, brandLogoPath) {
     doc.fillColor(BRAND_COLOR)
       .fontSize(10)
       .font('Helvetica-Bold')
-      .text('808', 0, height - 20, { align: 'center', width: width, characterSpacing: 5 });
+      .text('PULSE', 0, height - 20, { align: 'center', width: width, characterSpacing: 5 });
 
     doc.end();
   });
@@ -208,7 +208,7 @@ async function sendTicketsEmail(to, order, tickets) {
   const TEXT_MUTED = '#9cc9d3';
   const attachments = [];
 
-  const logoPath = process.env.BRAND_LOGO_PATH || path.resolve(__dirname, '..', '..', 'Menta sin fondo.png');
+  const logoPath = process.env.BRAND_LOGO_PATH || path.resolve(__dirname, '..', '..', 'frontend', 'public', 'assets', 'img', 'logos', 'logo-menta.png');
   let logoCid = null;
   if (fs.existsSync(logoPath)) {
     const extension = path.extname(logoPath).substring(1);
@@ -235,7 +235,7 @@ async function sendTicketsEmail(to, order, tickets) {
     }
   }
 
-  // Extract unique events from tickets to show their flyers
+  // Extract unique events from tickets and handle their images (attach local images as CIDs)
   const uniqueEvents = [];
   const eventIds = new Set();
 
@@ -243,24 +243,53 @@ async function sendTicketsEmail(to, order, tickets) {
     const eventId = t.eventId;
     if (!eventIds.has(eventId)) {
       eventIds.add(eventId);
-      // Try to get event details from the ticket object or its attached event object
-      uniqueEvents.push({
+
+      const eventData = {
         name: t.eventName || 'Evento',
         image: t.getDataValue ? t.getDataValue('eventImage') : (t.event ? t.event.image : null),
-        description: t.event ? t.event.description : ''
-      });
+        description: t.event ? t.event.description : '',
+        cid: null
+      };
+
+      // If the image is a local path, attach it as CID
+      if (eventData.image && !eventData.image.startsWith('http') && !eventData.image.startsWith('data:')) {
+        const fullImagePath = path.resolve(__dirname, '..', '..', 'frontend', 'public', eventData.image);
+        if (fs.existsSync(fullImagePath)) {
+          const extension = path.extname(fullImagePath).substring(1);
+          const cid = `event-${eventId}@808pulse`;
+          eventData.cid = cid;
+          attachments.push({
+            filename: `flyer-${eventId}.${extension}`,
+            path: fullImagePath,
+            cid: cid
+          });
+        }
+      }
+
+      uniqueEvents.push(eventData);
     }
   }
 
-  const flyersHtml = uniqueEvents.map(ev => `
-    <div style="margin-bottom: 30px; border-radius: 12px; overflow: hidden; background: #111821; border: 1px solid rgba(0,255,255,0.1);">
-      ${ev.image ? `<img src="${ev.image}" alt="${ev.name}" style="width: 100%; display: block; border-bottom: 2px solid ${BRAND_COLOR};">` : ''}
-      <div style="padding: 20px; text-align: left;">
-        <h2 style="color: ${TEXT_LIGHT}; margin: 0 0 10px 0; font-size: 18px;">${ev.name.toUpperCase()}</h2>
-        ${ev.description ? `<p style="color: ${TEXT_MUTED}; font-size: 14px; line-height: 1.5; margin: 0;">${ev.description}</p>` : ''}
+  const flyersHtml = uniqueEvents.map(ev => {
+    // Determine image source: CID if attached, or direct URL
+    let imgSrc = ev.image;
+    if (ev.cid) {
+      imgSrc = `cid:${ev.cid}`;
+    } else if (imgSrc && !imgSrc.startsWith('http')) {
+      // Fallback to BASE_URL if CID didn't work for some reason
+      const baseUrl = process.env.BASE_URL || 'http://localhost:3002';
+      imgSrc = `${baseUrl}/${imgSrc}`;
+    }
+
+    return `
+      <div style="margin-bottom: 30px; border-radius: 12px; overflow: hidden; background: #111821; border: 1px solid rgba(0,255,255,0.1);">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${ev.name}" style="width: 100%; display: block; border-bottom: 2px solid ${BRAND_COLOR};">` : ''}
+        <div style="padding: 20px; text-align: center;">
+          <h2 style="color: ${TEXT_LIGHT}; margin: 0; font-size: 18px;">${ev.name.toUpperCase()}</h2>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   const totalStr = (order.total || 0).toLocaleString('es-CO');
   const preheader = `Tus tickets para la orden ${order.orderId}`;

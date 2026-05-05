@@ -38,6 +38,10 @@ const Order = sequelize.define('Order', {
             isEmail: true
         }
     },
+    customerCedula: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     paymentMethod: {
         type: DataTypes.ENUM('whatsapp', 'transfer', 'cash'),
         defaultValue: 'whatsapp'
