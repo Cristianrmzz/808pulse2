@@ -1861,11 +1861,11 @@
                         token = qrData.token || qrData.qrToken || raw;
                     } catch (_) { }
                     if (scanningBusy) return;
+                    scanningBusy = true;
                     useToken(token).then(res => {
                         if (res.success || res.alreadyUsed) startCooldown(5);
                         else {
                             // Breve pausa si es otro error (invalido, red) para evitar ráfagas
-                            scanningBusy = true;
                             setTimeout(() => { scanningBusy = false; }, 1500);
                         }
                     });
