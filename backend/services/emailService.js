@@ -1,21 +1,15 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 
-function createTransport() {
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT || 587);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const secure = String(process.env.SMTP_SECURE || 'false') === 'true';
-
-  if (!host || !user || !pass) {
-    console.warn('[EmailService] SMTP no configurado. Defina SMTP_HOST, SMTP_USER, SMTP_PASS en .env');
-    return null;
+let resendClient = null;
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!resendClient && apiKey) {
+    resendClient = new Resend(apiKey);
   }
-
-  return nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
+  return resendClient;
 }
 
 /**
@@ -196,10 +190,10 @@ async function generateTicketPDF(ticket, brandLogoPath) {
 }
 
 async function sendTicketsEmail(to, order, tickets) {
-  const transporter = createTransport();
-  if (!transporter) {
-    console.warn('[EmailService] No transporter. Se omite envío.');
-    return { sent: false, reason: 'smtp_not_configured' };
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn('[EmailService] RESEND_API_KEY no detectado. Omite envío.');
+    return { sent: false, reason: 'api_key_not_configured' };
   }
 
   const BRAND = process.env.BRAND_NAME || '808 PULSE';
@@ -349,15 +343,25 @@ async function sendTicketsEmail(to, order, tickets) {
   </html>
   `;
 
-  const info = await transporter.sendMail({
-    from: process.env.SMTP_FROM || `808 PULSE <no-reply@808pulse.local>`,
-    to,
-    subject: `Tus tickets (${tickets.length}) - Orden ${order.orderId}`,
-    html,
-    attachments
-  });
+  // Clean up attachments specifically for Resend (BaseURL URLs already taking care of flyers)
+  const safeAttachments = attachments.filter(a => a.contentType === 'application/pdf').map(a => ({
+    filename: a.filename,
+    content: a.content // Resend accepts streams, buffers or base64
+  }));
 
-  return { sent: true, messageId: info.messageId };
+  try {
+    const data = await resend.emails.send({
+      from: process.env.SMTP_FROM || '808 PULSE <no-reply@808pulse.com>',
+      to,
+      subject: `Tus tickets (${tickets.length}) - Orden ${order.orderId}`,
+      html,
+      attachments: safeAttachments
+    });
+    return { sent: true, messageId: data.id };
+  } catch (error) {
+    console.error('[EmailService] Resend API Error:', error);
+    return { sent: false, reason: error.message };
+  }
 }
 
 module.exports = { sendTicketsEmail };
