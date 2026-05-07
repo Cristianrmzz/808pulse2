@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CONFIGURACIÓN DE LA API ---
     // En producción, cambia esta URL por la de tu backend real (ej: 'https://api.808pulse.com')
-    const PROD_API_URL = 'https://tudominio-backend.com/api';
+    const PROD_API_URL = 'https://eight08pulse.onrender.com/api';
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
     const API_BASE_URL = isLocalhost

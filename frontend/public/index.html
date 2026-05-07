@@ -526,7 +526,7 @@
                 ERROR_MSG.style.display = 'none';
                 if (!password) { ERROR_MSG.textContent = 'Ingresa la clave.'; ERROR_MSG.style.display = 'block'; return; }
                 try {
-                    const resp = await fetch('http://localhost:3002/api/auth/login', {
+                    const resp = await fetch('https://eight08pulse.onrender.com/api/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username, password })

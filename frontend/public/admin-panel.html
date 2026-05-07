@@ -943,8 +943,8 @@
         window.QrScanner = QrScanner;
     </script>
     <script>
-        const API_HOSTNAME = window.location.hostname || 'localhost';
-        const API_BASE = `http://${API_HOSTNAME}:3002/api`;
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_BASE = isLocalhost ? `http://${window.location.hostname}:3002/api` : 'https://eight08pulse.onrender.com/api';
         // --- Auth helpers ---
         function getToken() { return sessionStorage.getItem('adminToken'); }
         function authHeaders() {
