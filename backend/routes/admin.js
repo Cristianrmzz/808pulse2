@@ -121,6 +121,7 @@ router.post('/confirm-payment/:orderId', async (req, res) => {
 router.get('/tickets', async (req, res) => {
     try {
         const tickets = await Ticket.findAll({
+            attributes: { exclude: ['qrData'] },
             include: [
                 { model: Event, as: 'event' },
                 { model: Order, as: 'order' }
