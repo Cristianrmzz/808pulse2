@@ -350,16 +350,23 @@ async function sendTicketsEmail(to, order, tickets) {
   }));
 
   try {
-    const data = await resend.emails.send({
+    const response = await resend.emails.send({
       from: process.env.SMTP_FROM || '808 PULSE <no-reply@808pulse.com>',
       to,
       subject: `Tus tickets (${tickets.length}) - Orden ${order.orderId}`,
       html,
       attachments: safeAttachments
     });
-    return { sent: true, messageId: data.id };
+
+    // Resend SDK v2+ returns { data, error } instead of throwing
+    if (response.error) {
+      console.error('[EmailService] Resend API Error:', response.error);
+      return { sent: false, reason: response.error.message };
+    }
+
+    return { sent: true, messageId: response.data ? response.data.id : null };
   } catch (error) {
-    console.error('[EmailService] Resend API Error:', error);
+    console.error('[EmailService] Catch Error:', error);
     return { sent: false, reason: error.message };
   }
 }
