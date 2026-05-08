@@ -319,7 +319,11 @@ router.post('/whatsapp', async (req, res) => {
         const order = await Order.create({
             orderId: uuidv4(),
             total: orderData.total,
-            paymentMethod: 'whatsapp'
+            paymentMethod: 'whatsapp',
+            customerName: orderData.customer ? orderData.customer.name : null,
+            customerPhone: orderData.customer ? orderData.customer.phone : null,
+            customerEmail: orderData.customer ? orderData.customer.email : null,
+            customerCedula: orderData.customer ? orderData.customer.doc : null
         });
 
         // Create order items
