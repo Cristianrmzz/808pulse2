@@ -202,17 +202,8 @@ async function sendTicketsEmail(to, order, tickets) {
   const TEXT_MUTED = '#9cc9d3';
   const attachments = [];
 
-  const logoPath = process.env.BRAND_LOGO_PATH || path.resolve(__dirname, '..', '..', 'frontend', 'public', 'assets', 'img', 'logos', 'logo-menta.png');
-  let logoCid = null;
-  if (fs.existsSync(logoPath)) {
-    const extension = path.extname(logoPath).substring(1);
-    logoCid = 'brandlogo@808pulse';
-    attachments.push({
-      filename: `logo.${extension}`,
-      path: logoPath,
-      cid: logoCid
-    });
-  }
+  // Define the public URL for the brand logo to display in the email body
+  const logoUrl = `${process.env.BASE_URL || 'http://localhost:3002'}/assets/img/logos/logo-menta.png`;
 
   // Generate individual PDFs for each ticket
   for (let i = 0; i < tickets.length; i++) {
@@ -229,55 +220,45 @@ async function sendTicketsEmail(to, order, tickets) {
     }
   }
 
-  // Extract unique events from tickets and handle their images (attach local images as CIDs)
+  // Extract unique events from tickets to display their flyers in the email
   const uniqueEvents = [];
   const eventIds = new Set();
+  // Use FRONTEND_URL for assets (Netlify), BASE_URL only for backend endpoints
+  const frontendUrl = process.env.FRONTEND_URL || process.env.BASE_URL || 'http://localhost:3002';
 
   for (const t of tickets) {
     const eventId = t.eventId;
     if (!eventIds.has(eventId)) {
       eventIds.add(eventId);
 
+      // Priority: ticket.event.image (attached by ticketService) → getDataValue fallback
+      const rawImage = (t.event && t.event.image)
+        ? t.event.image
+        : (t.getDataValue ? t.getDataValue('eventImage') : null);
+
       const eventData = {
         name: t.eventName || 'Evento',
-        image: t.getDataValue ? t.getDataValue('eventImage') : (t.event ? t.event.image : null),
-        description: t.event ? t.event.description : '',
-        cid: null
+        image: rawImage,
+        description: t.event ? t.event.description : ''
       };
-
-      // If the image is a local path, attach it as CID
-      if (eventData.image && !eventData.image.startsWith('http') && !eventData.image.startsWith('data:')) {
-        const fullImagePath = path.resolve(__dirname, '..', '..', 'frontend', 'public', eventData.image);
-        if (fs.existsSync(fullImagePath)) {
-          const extension = path.extname(fullImagePath).substring(1);
-          const cid = `event-${eventId}@808pulse`;
-          eventData.cid = cid;
-          attachments.push({
-            filename: `flyer-${eventId}.${extension}`,
-            path: fullImagePath,
-            cid: cid
-          });
-        }
-      }
 
       uniqueEvents.push(eventData);
     }
   }
 
   const flyersHtml = uniqueEvents.map(ev => {
-    // Determine image source: CID if attached, or direct URL
+    // Convert local relative paths to absolute frontend URLs so email clients can display them
     let imgSrc = ev.image;
-    if (ev.cid) {
-      imgSrc = `cid:${ev.cid}`;
-    } else if (imgSrc && !imgSrc.startsWith('http')) {
-      // Fallback to BASE_URL if CID didn't work for some reason
-      const baseUrl = process.env.BASE_URL || 'http://localhost:3002';
-      imgSrc = `${baseUrl}/${imgSrc}`;
+    if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
+      if (!imgSrc.startsWith('/')) imgSrc = '/' + imgSrc;
+      imgSrc = `${frontendUrl}${imgSrc}`;
     }
+
+    console.log(`[EmailService] Flyer URL for "${ev.name}": ${imgSrc || '(ninguna)'}`);
 
     return `
       <div style="margin-bottom: 30px; border-radius: 12px; overflow: hidden; background: #111821; border: 1px solid rgba(0,255,255,0.1);">
-        ${imgSrc ? `<img src="${imgSrc}" alt="${ev.name}" style="width: 100%; display: block; border-bottom: 2px solid ${BRAND_COLOR};">` : ''}
+        ${imgSrc ? `<img src="${imgSrc}" alt="${ev.name}" style="width: 100%; display: block; border-bottom: 2px solid ${BRAND_COLOR};">` : '<p style="color:#9cc9d3; text-align:center; padding:20px 0;">Flyer no disponible</p>'}
         <div style="padding: 20px; text-align: center;">
           <h2 style="color: ${TEXT_LIGHT}; margin: 0; font-size: 18px;">${ev.name.toUpperCase()}</h2>
         </div>
@@ -304,7 +285,7 @@ async function sendTicketsEmail(to, order, tickets) {
             <tr><td style="height:5px; background:${BRAND_COLOR}; border-radius:16px 16px 0 0;"></td></tr>
             <tr>
               <td align="center" style="padding:30px;">
-                ${logoCid ? `<img src="cid:${logoCid}" height="50" style="margin-bottom:30px;">` : ''}
+                <img src="${logoUrl}" height="50" style="margin-bottom:30px;" alt="808 PULSE">
                 
                 <h1 style="color:${TEXT_LIGHT}; margin:0; font-size:26px; font-weight: bold;">¡TU ACCESO ESTÁ LISTO!</h1>
                 <p style="color:${TEXT_MUTED}; font-size:16px; margin:15px 0 30px 0;">

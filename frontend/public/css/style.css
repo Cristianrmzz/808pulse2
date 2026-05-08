@@ -845,6 +845,60 @@ body.light-mode .drawer-btn.ghost {
     padding: 0 5%;
 }
 
+/* ── HERO TAGLINE ─────────────────────────────── */
+.hero-tagline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 2.2rem;
+    padding: 0 5%;
+    animation: fade-in-up 1.2s ease-out;
+}
+
+.tagline-line {
+    flex: 1;
+    max-width: 90px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.7));
+    border-radius: 1px;
+}
+
+.tagline-line:last-child {
+    background: linear-gradient(90deg, rgba(0, 255, 255, 0.7), transparent);
+}
+
+.tagline-text {
+    font-size: clamp(0.9rem, 2.8vw, 1.25rem);
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #00ffff, #cc00ff, #00ffff);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: tagline-shimmer 5s linear infinite;
+    white-space: nowrap;
+}
+
+@keyframes tagline-shimmer {
+    0%   { background-position: 0% center; }
+    100% { background-position: 200% center; }
+}
+
+@media (max-width: 480px) {
+    .tagline-text {
+        white-space: normal;
+        text-align: center;
+        letter-spacing: 0.08em;
+    }
+    .tagline-line {
+        max-width: 40px;
+    }
+}
+/* ────────────────────────────────────────────── */
+
 .cta-button {
     background: var(--primary-color);
     color: var(--dark-bg);
