@@ -247,20 +247,10 @@ async function sendTicketsEmail(to, order, tickets) {
   }
 
   const flyersHtml = uniqueEvents.map(ev => {
-    // Convert local relative paths to absolute frontend URLs so email clients can display them
-    let imgSrc = ev.image;
-    if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
-      if (!imgSrc.startsWith('/')) imgSrc = '/' + imgSrc;
-      imgSrc = `${frontendUrl}${imgSrc}`;
-    }
-
-    console.log(`[EmailService] Flyer URL for "${ev.name}": ${imgSrc || '(ninguna)'}`);
-
     return `
       <div style="margin-bottom: 30px; border-radius: 12px; overflow: hidden; background: #111821; border: 1px solid rgba(0,255,255,0.1);">
-        ${imgSrc ? `<img src="${imgSrc}" alt="${ev.name}" style="width: 100%; display: block; border-bottom: 2px solid ${BRAND_COLOR};">` : '<p style="color:#9cc9d3; text-align:center; padding:20px 0;">Flyer no disponible</p>'}
-        <div style="padding: 20px; text-align: center;">
-          <h2 style="color: ${TEXT_LIGHT}; margin: 0; font-size: 18px;">${ev.name.toUpperCase()}</h2>
+        <div style="padding: 24px 20px; text-align: center; border-bottom: 2px solid ${BRAND_COLOR};">
+          <h2 style="color: ${TEXT_LIGHT}; margin: 0; font-size: 22px; letter-spacing: 4px; font-weight: 700;">${ev.name.toUpperCase()}</h2>
         </div>
       </div>
     `;

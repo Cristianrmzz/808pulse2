@@ -1,0 +1,6 @@
+# Cuando alguien visita /inicio → sirve index.html sin cambiar la URL del navegador
+/inicio   /index.html   200
+
+# Si alguien escribe /index o /index.html → redirige permanentemente a /inicio
+/index        /inicio   301
+/index.html   /inicio   301
