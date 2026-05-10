@@ -77,9 +77,7 @@
                         <i class="fas fa-universal-access"></i> Accesibilidad
                     </button>
 
-                    <button id="admin-login-btn" class="drawer-btn ghost" title="Panel de administración">
-                        <i class="fas fa-user-shield"></i> Ingreso Admin
-                    </button>
+
 
                     <button id="admin-logout-btn" class="drawer-btn ghost" style="display:none;" title="Cerrar sesión">
                         <i class="fas fa-sign-out-alt"></i> Cerrar sesión
@@ -181,7 +179,7 @@
             <div class="artists-grid">
                 <article class="artist-card reveal">
                     <div class="artist-photo">
-                        <img src="assets/img/artists/r4mmy.jpeg" alt="Artista 1">
+                        <img src="assets/img/artists/r4mmy.jpeg" alt="Artista 1" loading="lazy">
                     </div>
                     <div class="artist-info">
                         <h3>R4MMY</h3>
@@ -201,7 +199,7 @@
                 </article>
                 <article class="artist-card reveal">
                     <div class="artist-photo">
-                        <img src="assets/img/artists/sandoval.jpeg" alt="Artista 3">
+                        <img src="assets/img/artists/sandoval.jpeg" alt="Artista 3" loading="lazy">
                     </div>
                     <div class="artist-info">
                         <h3>SANDOVAL DV</h3>
@@ -222,10 +220,10 @@
                 </article>
                 <article class="artist-card reveal">
                     <div class="artist-photo">
-                        <img src="assets/img/artists/sypnasys.jpeg" alt="Artista 3">
+                        <img src="assets/img/artists/sypnasys.jpeg" alt="Artista 3" loading="lazy">
                     </div>
                     <div class="artist-info">
-                        <h3>SYPNASYS</h3>
+                        <h3>SYNAPSYS</h3>
                         <p class="artist-role">Neo rave / Industrial / Hard techno</p>
                         <p class="artist-bio">Groove contundente, bajos profundos y ritmo imparable. Su selección mezcla
                             clásicos con cuts underground que mantienen la pista en alto.</p>
@@ -242,7 +240,7 @@
                 </article>
                 <article class="artist-card reveal">
                     <div class="artist-photo">
-                        <img src="assets/img/artists/spock.jpeg" alt="Artista 3">
+                        <img src="assets/img/artists/spock.jpeg" alt="Artista 3" loading="lazy">
                     </div>
                     <div class="artist-info">
                         <h3>SPOCK</h3>
@@ -518,7 +516,16 @@
             function openModal() { MODAL.style.display = 'flex'; PASS_INPUT.focus(); }
             function closeModal() { MODAL.style.display = 'none'; ERROR_MSG.style.display = 'none'; PASS_INPUT.value = ''; }
 
-            OPEN_BTN.addEventListener('click', openModal);
+            if (OPEN_BTN) OPEN_BTN.addEventListener('click', openModal);
+
+            // Secreto: Abrir con parámetro en la URL (?admin=true)
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('admin')) {
+                openModal();
+                // Limpiar la URL para que no se vea el parámetro después de abrirlo
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
             CLOSE_BTN.addEventListener('click', closeModal);
             window.addEventListener('click', (e) => { if (e.target === MODAL) closeModal(); });
             PASS_INPUT.addEventListener('keypress', (e) => { if (e.key === 'Enter') SUBMIT_BTN.click(); });

@@ -220,42 +220,6 @@ async function sendTicketsEmail(to, order, tickets) {
     }
   }
 
-  // Extract unique events from tickets to display their flyers in the email
-  const uniqueEvents = [];
-  const eventIds = new Set();
-  // Use FRONTEND_URL for assets (Netlify), BASE_URL only for backend endpoints
-  const frontendUrl = process.env.FRONTEND_URL || process.env.BASE_URL || 'http://localhost:3002';
-
-  for (const t of tickets) {
-    const eventId = t.eventId;
-    if (!eventIds.has(eventId)) {
-      eventIds.add(eventId);
-
-      // Priority: ticket.event.image (attached by ticketService) → getDataValue fallback
-      const rawImage = (t.event && t.event.image)
-        ? t.event.image
-        : (t.getDataValue ? t.getDataValue('eventImage') : null);
-
-      const eventData = {
-        name: t.eventName || 'Evento',
-        image: rawImage,
-        description: t.event ? t.event.description : ''
-      };
-
-      uniqueEvents.push(eventData);
-    }
-  }
-
-  const flyersHtml = uniqueEvents.map(ev => {
-    return `
-      <div style="margin-bottom: 30px; border-radius: 12px; overflow: hidden; background: #111821; border: 1px solid rgba(0,255,255,0.1);">
-        <div style="padding: 24px 20px; text-align: center; border-bottom: 2px solid ${BRAND_COLOR};">
-          <h2 style="color: ${TEXT_LIGHT}; margin: 0; font-size: 22px; letter-spacing: 4px; font-weight: 700;">${ev.name.toUpperCase()}</h2>
-        </div>
-      </div>
-    `;
-  }).join('');
-
   const totalStr = (order.total || 0).toLocaleString('es-CO');
   const preheader = `Tus tickets para la orden ${order.orderId}`;
 
@@ -281,9 +245,6 @@ async function sendTicketsEmail(to, order, tickets) {
                 <p style="color:${TEXT_MUTED}; font-size:16px; margin:15px 0 30px 0;">
                   Hola <strong>${order.customerName}</strong>, gracias por tu compra. Tus tickets han sido generados exitosamente.
                 </p>
-
-                <!-- Flyer Section -->
-                ${flyersHtml}
 
                 <div style="background:rgba(0,255,255,0.03); border:1px dashed rgba(0,255,255,0.2); border-radius:12px; padding:25px; margin:30px 0; text-align: left;">
                   <h3 style="color:${BRAND_COLOR}; margin: 0 0 15px 0; font-size: 14px; letter-spacing: 1px;">DETALLES DE LA COMPRA</h3>
