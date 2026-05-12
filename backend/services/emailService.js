@@ -203,7 +203,7 @@ async function sendTicketsEmail(to, order, tickets) {
   const attachments = [];
 
   // Define the public URL for the brand logo to display in the email body
-  const logoUrl = `${process.env.BASE_URL || 'http://localhost:3002'}/assets/img/logos/logo-menta.png`;
+  const logoUrl = `${process.env.BASE_URL || 'http://localhost:3002'}/assets/img/logos/logo-menta.webp`;
 
   // Generate individual PDFs for each ticket
   for (let i = 0; i < tickets.length; i++) {

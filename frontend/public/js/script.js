@@ -101,11 +101,16 @@ document.addEventListener('DOMContentLoaded', () => {
         filteredEvents.forEach(event => {
             const card = document.createElement('div');
             card.className = 'event-card';
+            // Intentar usar versión optimizada .webp si es una imagen local
+            const eventImage = event.image.includes('assets/img/')
+                ? event.image.replace(/\.(png|jpg|jpeg)$/, '.webp')
+                : event.image;
+
             card.innerHTML = `
                 <div class="event-card-grid">
                     <div class="event-flyer">
                         <div class="flyer-frame">
-                            <img src="${event.image}" alt="Flyer ${event.name}">
+                            <img src="${eventImage}" alt="Flyer ${event.name}" loading="lazy">
                         </div>
                     </div>
                     <div class="event-card-content">
