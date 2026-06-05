@@ -111,6 +111,7 @@ class TicketService {
         try {
             const ticket = await Ticket.findOne({
                 where: { qrToken },
+                attributes: { exclude: ['qrData'] },
                 include: [
                     { model: Event, as: 'event' }
                 ]
@@ -158,7 +159,10 @@ class TicketService {
     // Marcar ticket como usado (al ingresar al evento)
     static async useTicket(qrToken) {
         try {
-            const ticket = await Ticket.findOne({ where: { qrToken } });
+            const ticket = await Ticket.findOne({
+                where: { qrToken },
+                attributes: { exclude: ['qrData'] }
+            });
 
             if (!ticket) {
                 return { success: false, message: 'Ticket no encontrado' };
