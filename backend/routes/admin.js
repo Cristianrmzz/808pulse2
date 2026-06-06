@@ -12,12 +12,18 @@ const { Op } = require('sequelize');
 // Proteger todas las rutas de admin
 router.use(authRequired, adminOnly);
 
-// GET /api/admin/orders - Ver todas las órdenes pendientes
+// GET /api/admin/orders - Ver todas las órdenes pendientes (PAGINADO)
 router.get('/orders', async (req, res) => {
     try {
-        const orders = await Order.findAll({
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+
+        const { count, rows: orders } = await Order.findAndCountAll({
             include: [{ model: OrderItem, as: 'items' }],
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
         });
 
         res.json({
@@ -36,7 +42,13 @@ router.get('/orders', async (req, res) => {
                     price: item.price,
                     subtotal: item.subtotal
                 }))
-            }))
+            })),
+            pagination: {
+                total: count,
+                pages: Math.ceil(count / limit),
+                currentPage: page,
+                limit
+            }
         });
     } catch (error) {
         console.error('Error obteniendo órdenes:', error);
@@ -105,7 +117,7 @@ router.post('/confirm-payment/:orderId', async (req, res) => {
                 ticketId: ticket.ticketId,
                 eventName: ticket.eventName,
                 qrToken: ticket.qrToken,
-                qrData: ticket.qrData,
+                // qrData removido para ahorrar memoria en el response
                 expiresAt: ticket.expiresAt,
                 verifyUrl: `${process.env.BASE_URL || 'http://localhost:3000'}/api/tickets/verify/${ticket.qrToken}`
             }))
@@ -117,16 +129,22 @@ router.post('/confirm-payment/:orderId', async (req, res) => {
     }
 });
 
-// GET /api/admin/tickets - Ver todos los tickets
+// GET /api/admin/tickets - Ver todos los tickets (PAGINADO)
 router.get('/tickets', async (req, res) => {
     try {
-        const tickets = await Ticket.findAll({
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const offset = (page - 1) * limit;
+
+        const { count, rows: tickets } = await Ticket.findAndCountAll({
             attributes: { exclude: ['qrData'] },
             include: [
                 { model: Event, as: 'event' },
                 { model: Order, as: 'order' }
             ],
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
         });
 
         res.json({
@@ -140,7 +158,13 @@ router.get('/tickets', async (req, res) => {
                 expiresAt: ticket.expiresAt,
                 usedAt: ticket.usedAt,
                 createdAt: ticket.createdAt
-            }))
+            })),
+            pagination: {
+                total: count,
+                pages: Math.ceil(count / limit),
+                currentPage: page,
+                limit
+            }
         });
     } catch (error) {
         console.error('Error obteniendo tickets:', error);

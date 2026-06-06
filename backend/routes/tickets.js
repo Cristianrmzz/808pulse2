@@ -35,7 +35,7 @@ router.post('/generate', async (req, res) => {
             tickets: tickets.map(ticket => ({
                 ticketId: ticket.ticketId,
                 eventName: ticket.eventName,
-                qrData: ticket.qrData,
+                // qrData removido para ahorrar memoria
                 expiresAt: ticket.expiresAt
             }))
         });
@@ -108,7 +108,7 @@ router.get('/order/:orderId', async (req, res) => {
                 eventName: ticket.eventName,
                 customerName: ticket.customerName,
                 status: ticket.status,
-                qrData: ticket.qrData,
+                // qrData removido para ahorrar memoria
                 expiresAt: ticket.expiresAt,
                 usedAt: ticket.usedAt
             }))
@@ -158,7 +158,7 @@ router.post('/confirm-payment', async (req, res) => {
             tickets: tickets.map(ticket => ({
                 ticketId: ticket.ticketId,
                 eventName: ticket.eventName,
-                qrData: ticket.qrData,
+                // qrData removido para ahorrar memoria
                 expiresAt: ticket.expiresAt
             }))
         });

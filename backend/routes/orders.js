@@ -88,14 +88,29 @@ router.post('/', async (req, res) => {
     }
 });
 
-// GET /api/orders - Get all orders
+// GET /api/orders - Get all orders (PAGINATED)
 router.get('/', async (req, res) => {
     try {
-        const orders = await Order.findAll({
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+
+        const { count, rows: orders } = await Order.findAndCountAll({
             include: [{ model: OrderItem, as: 'items' }],
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
         });
-        res.json(orders);
+
+        res.json({
+            orders,
+            pagination: {
+                total: count,
+                pages: Math.ceil(count / limit),
+                currentPage: page,
+                limit
+            }
+        });
     } catch (error) {
         console.error('Error fetching orders:', error);
         res.status(500).json({ message: 'Error fetching orders' });

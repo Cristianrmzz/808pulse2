@@ -1078,14 +1078,18 @@
             }
         }
 
+        let ordersCurrentPage = 1;
         // Load orders
-        async function loadOrders() {
+        async function loadOrders(page = 1) {
             try {
-                const response = await fetchWithAuth(`${API_BASE}/admin/orders`);
+                ordersCurrentPage = page;
+                const response = await fetchWithAuth(`${API_BASE}/admin/orders?page=${page}&limit=20`);
                 const data = await response.json();
 
                 const ordersContainer = document.getElementById('orders-container');
-                ordersContainer.innerHTML = data.orders.map(order => `
+
+                // Content
+                const contentHtml = data.orders.map(order => `
                     <div class="order-card ${order.status}">
                         <div class="order-header">
                             <div class="order-id">Orden: ${order.orderId}</div>
@@ -1116,22 +1120,36 @@
                         </div>
                     </div>
                 `).join('');
+
+                // Pagination
+                const paginationHtml = data.pagination && data.pagination.pages > 1 ? `
+                    <div class="pagination" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; padding: 20px;">
+                        <button class="btn" onclick="loadOrders(${page - 1})" ${page <= 1 ? 'disabled' : ''}>Anterior</button>
+                        <span style="align-self: center;">Página ${page} de ${data.pagination.pages}</span>
+                        <button class="btn" onclick="loadOrders(${page + 1})" ${page >= data.pagination.pages ? 'disabled' : ''}>Siguiente</button>
+                    </div>
+                ` : '';
+
+                ordersContainer.innerHTML = contentHtml + paginationHtml;
+
                 // actualizar contador en botón limpiar
                 const obtn = document.getElementById('clear-orders-btn');
-                if (obtn) obtn.textContent = `Limpiar (${data.orders.length})`;
+                if (obtn) obtn.textContent = `Limpiar (${data.pagination ? data.pagination.total : data.orders.length})`;
             } catch (error) {
                 console.error('Error loading orders:', error);
             }
         }
 
+        let ticketsCurrentPage = 1;
         // Load tickets
-        async function loadTickets() {
+        async function loadTickets(page = 1) {
             try {
-                const response = await fetchWithAuth(`${API_BASE}/admin/tickets`);
+                ticketsCurrentPage = page;
+                const response = await fetchWithAuth(`${API_BASE}/admin/tickets?page=${page}&limit=50`);
                 const data = await response.json();
 
                 const ticketsContainer = document.getElementById('tickets-container');
-                ticketsContainer.innerHTML = data.tickets.map(ticket => `
+                const contentHtml = data.tickets.map(ticket => `
                     <div class="ticket-info">
                         <p><strong>ID:</strong> ${ticket.ticketId}</p>
                         <p><strong>Evento:</strong> ${ticket.eventName}</p>
@@ -1144,9 +1162,21 @@
                         ${ticket.usedAt ? `<p><strong>Usado:</strong> ${new Date(ticket.usedAt).toLocaleString('es-ES')}</p>` : ''}
                     </div>
                 `).join('');
+
+                // Pagination
+                const paginationHtml = data.pagination && data.pagination.pages > 1 ? `
+                    <div class="pagination" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; padding: 20px;">
+                        <button class="btn" onclick="loadTickets(${page - 1})" ${page <= 1 ? 'disabled' : ''}>Anterior</button>
+                        <span style="align-self: center;">Página ${page} de ${data.pagination.pages}</span>
+                        <button class="btn" onclick="loadTickets(${page + 1})" ${page >= data.pagination.pages ? 'disabled' : ''}>Siguiente</button>
+                    </div>
+                ` : '';
+
+                ticketsContainer.innerHTML = contentHtml + paginationHtml;
+
                 // actualizar contador en botón limpiar
                 const tbtn = document.getElementById('clear-tickets-btn');
-                if (tbtn) tbtn.textContent = `Limpiar (${(data.tickets || []).length})`;
+                if (tbtn) tbtn.textContent = `Limpiar (${data.pagination ? data.pagination.total : (data.tickets || []).length})`;
             } catch (error) {
                 console.error('Error loading tickets:', error);
             }
